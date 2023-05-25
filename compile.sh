@@ -1010,9 +1010,11 @@ echo "[PHP] Downloading additional extensions..."
 if [ "$PM_VERSION_MAJOR" -ge 5 ]; then
 	get_github_extension "pmmpthread" "$EXT_PMMPTHREAD_VERSION" "pmmp" "ext-pmmpthread"
 	THREAD_EXT_FLAGS="--enable-pmmpthread"
+	EXT_VANILLAGENERATOR_VERSION="pm5"
 else
 	get_github_extension "pthreads" "$EXT_PTHREADS_VERSION" "pmmp" "ext-pmmpthread" #"v" needed for release tags because github removes the "v"
 	THREAD_EXT_FLAGS="--enable-pthreads"
+	EXT_VANILLAGENERATOR_VERSION="master"
 fi
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
@@ -1041,6 +1043,9 @@ get_github_extension "morton" "$EXT_MORTON_VERSION" "pmmp" "ext-morton"
 get_github_extension "xxhash" "$EXT_XXHASH_VERSION" "pmmp" "ext-xxhash"
 
 get_github_extension "arraydebug" "$EXT_ARRAYDEBUG_VERSION" "pmmp" "ext-arraydebug"
+
+get_github_extension "vanillagenerator" "$EXT_VANILLAGENERATOR_VERSION" "AID-LEARNING" "ext-vanillagenerator"
+
 
 echo -n "[PHP]"
 
@@ -1172,6 +1177,7 @@ $HAVE_MYSQLI \
 --with-crypto \
 --enable-recursionguard \
 --enable-xxhash \
+--enable-vanillagenerator \
 --enable-arraydebug \
 $HAVE_VALGRIND \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
@@ -1269,30 +1275,6 @@ if [ "$COMPILE_TARGET" == "mac-"* ]; then
 fi
 
 echo " done!"
-
-if [[ "$HAVE_XDEBUG" == "yes" ]]; then
-	get_github_extension "xdebug" "$EXT_XDEBUG_VERSION" "xdebug" "xdebug"
-	echo -n "[xdebug] checking..."
-	cd "$BUILD_DIR/php/ext/xdebug"
-	"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
-	./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
-	echo -n " compiling..."
-	make -j4 >> "$DIR/install.log" 2>&1
-	echo -n " installing..."
-	make install >> "$DIR/install.log" 2>&1
-	echo "" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";WARNING: When loaded, xdebug 3.2.0 will cause segfaults whenever an uncaught error is thrown, even if xdebug.mode=off. Load it at your own risk." >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";zend_extension=xdebug.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";https://xdebug.org/docs/all_settings#mode" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.mode=off" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.start_with_request=yes" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";The following overrides allow profiler, gc stats and traces to work correctly in ZTS" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.profiler_output_name=cachegrind.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.gc_stats_output_name=gcstats.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.trace_output_name=trace.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo " done!"
-	write_out INFO "Xdebug is included, but disabled by default. To enable it, change 'xdebug.mode' in your php.ini file."
-fi
 
 cd "$DIR"
 if [ "$DO_CLEANUP" == "yes" ]; then
