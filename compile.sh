@@ -1014,6 +1014,7 @@ function build_zstd {
 
 cd "$LIB_BUILD_DIR"
 
+build_zstd
 build_zlib
 build_gmp
 build_openssl
@@ -1029,7 +1030,6 @@ else
 	HAS_GD=""
 	HAS_LIBJPEG=""
 fi
-build_zstd
 build_libxml2
 build_libzip
 build_sqlite3
