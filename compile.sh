@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-[ -z "$PHP_VERSION" ] && PHP_VERSION="8.2.11"
+[ -z "$PHP_VERSION" ] && PHP_VERSION="8.1.24"
 
 ZLIB_VERSION="1.3"
 GMP_VERSION="6.3.0"
@@ -417,7 +417,7 @@ echo "}" >> test.c
 type $CC >> "$DIR/install.log" 2>&1 || { write_error "Please install \"$CC\""; exit 1; }
 
 if [ -z "$THREADS" ]; then
-	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."	
+	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."
 	THREADS=1;
 fi
 [ -z "$march" ] && march=native;
@@ -537,6 +537,42 @@ function build_zlib {
 	fi
 	write_done
 }
+
+function build_zstd {
+	if [ "$DO_STATIC" == "yes" ]; then
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=OFF"
+	else
+  		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
+  	fi
+	write_library zstd "$LIBZTD_VERSION"
+	local zstd_dir="./zstd-$LIBZTD_VERSION"
+
+	if cant_use_cache "$zstd_dir"; then
+		rm -rf "$zlib_dir"
+		write_download
+		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
+		write_configure
+		cmake . \
+			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
+			-DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
+			-DCMAKE_INSTALL_LIBDIR=lib \
+			-DCMAKE_BUILD_TYPE=Release \
+			$CMAKE_GLOBAL_EXTRA_FLAGS \
+			$CMAKE_LIBZIP_EXTRA_FLAGS \
+			$EXTRA_FLAGS \
+			>> "$DIR/install.log" 2>&1
+		write_compile
+		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$zstd_dir"
+	fi
+	write_install
+	make install >> "$DIR/install.log" 2>&1
+	cd ..
+	write_done
+}
+
 
 function build_gmp {
 	export jm_cv_func_working_malloc=yes
@@ -978,39 +1014,6 @@ function build_libdeflate {
 	write_done
 }
 
-function build_zstd {
-	if [ "$DO_STATIC" == "yes" ]; then
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=OFF"
-	fi
-	write_library zstd "$LIBZTD_VERSION"
-	local zstd_dir="./zstd-$LIBZTD_VERSION"
-
-	if cant_use_cache "$zstd_dir"; then
-		rm -rf "$zlib_dir"
-		write_download
-		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
-		write_configure
-		cmake . \
-			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
-			-DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
-			-DCMAKE_INSTALL_LIBDIR=lib \
-			-DCMAKE_BUILD_TYPE=Release \
-			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZIP_EXTRA_FLAGS \
-			$EXTRA_FLAGS \
-			>> "$DIR/install.log" 2>&1
-		write_compile
-		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
-	else
-		write_caching
-		cd "$zstd_dir"
-	fi
-	write_install
-	make install >> "$DIR/install.log" 2>&1
-	cd ..
-	write_done
-}
-
 cd "$LIB_BUILD_DIR"
 
 build_zstd
@@ -1074,8 +1077,6 @@ else
 	THREAD_EXT_FLAGS="--enable-pthreads"
 fi
 
-get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
-
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
 
@@ -1092,6 +1093,8 @@ cd "$BUILD_DIR"
 write_done
 
 get_github_extension "leveldb" "$EXT_LEVELDB_VERSION" "pmmp" "php-leveldb"
+
+get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 
 get_github_extension "chunkutils2" "$EXT_CHUNKUTILS2_VERSION" "pmmp" "ext-chunkutils2"
 
@@ -1176,12 +1179,11 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --exec-prefix="$INSTALL_DIR" \
 --with-curl \
 --with-zlib \
---with-libzstd \
---with-zlib \
 --with-gmp \
 --with-yaml \
 --with-openssl \
 --with-zip \
+--with-libzstd \
 --with-libdeflate \
 $HAS_LIBJPEG \
 $HAS_GD \
