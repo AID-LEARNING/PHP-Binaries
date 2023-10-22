@@ -999,8 +999,7 @@ function build_zstd {
 			-DCMAKE_INSTALL_LIBDIR=lib \
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS \
-			>> "$DIR/install.log" 2>&1
+			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
