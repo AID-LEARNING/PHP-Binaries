@@ -991,7 +991,7 @@ function build_zstd {
 		rm -rf "$zstd_dir"
 		write_download
 		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
-		cd "$zstd_dir"
+		cd "$zstd_dir/build/cmake"
 		write_configure
 		cmake . \
 			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
