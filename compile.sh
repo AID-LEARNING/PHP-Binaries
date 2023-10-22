@@ -979,10 +979,8 @@ function build_libdeflate {
 }
 
 function build_zstd {
-	if [ "$DO_STATIC" == "yes" ]; then
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=ON -DLIBDEFLATE_BUILD_SHARED_LIB=OFF"
-	else
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=OFF -DLIBDEFLATE_BUILD_SHARED_LIB=ON"
+	if [ "$DO_STATIC" != "yes" ]; then
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_SHARED_LIB=ON"
 	fi
 	write_library zstd "$LIBZTD_VERSION"
 	local zstd_dir="./zstd-$LIBZTD_VERSION"
@@ -991,6 +989,7 @@ function build_zstd {
 		rm -rf "$zlib_dir"
 		write_download
 		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
+		ls -l
 		cd "$zlib_dir"
 		write_configure
 		cmake . \
