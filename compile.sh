@@ -417,7 +417,7 @@ echo "}" >> test.c
 type $CC >> "$DIR/install.log" 2>&1 || { write_error "Please install \"$CC\""; exit 1; }
 
 if [ -z "$THREADS" ]; then
-	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."	
+	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."
 	THREADS=1;
 fi
 [ -z "$march" ] && march=native;
@@ -999,7 +999,6 @@ function build_zstd {
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
 			$CMAKE_LIBZSTD_EXTRA_FLAGS \
-			$EXTRA_FLAGS \
 			>> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
@@ -1015,7 +1014,6 @@ function build_zstd {
 
 cd "$LIB_BUILD_DIR"
 
-build_zstd
 build_zlib
 build_gmp
 build_openssl
@@ -1031,7 +1029,7 @@ else
 	HAS_GD=""
 	HAS_LIBJPEG=""
 fi
-
+build_zstd
 build_libxml2
 build_libzip
 build_sqlite3
