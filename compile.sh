@@ -11,6 +11,7 @@ LIBPNG_VERSION="1.6.40"
 LIBJPEG_VERSION="9e"
 OPENSSL_VERSION="3.1.3"
 LIBZIP_VERSION="1.10.1"
+LIBZTD_VERSION="1.5.5"
 SQLITE3_VERSION="3430100" #3.43.1
 LIBDEFLATE_VERSION="dd12ff2b36d603dbb7fa8838fe7e7176fcbd4f6f" #1.19
 
@@ -27,6 +28,7 @@ EXT_LIBDEFLATE_VERSION="0.2.1"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.1.0"
+EXT_ZSTD_VERSION="0.13.1"
 
 function write_out {
 	echo "[$1] $2"
@@ -976,8 +978,42 @@ function build_libdeflate {
 	write_done
 }
 
+function build_zstd {
+	if [ "$DO_STATIC" == "yes" ]; then
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=OFF"
+	fi
+	write_library zstd "$LIBZTD_VERSION"
+	local zstd_dir="./zstd-$LIBZTD_VERSION"
+
+	if cant_use_cache "$zstd_dir"; then
+		rm -rf "$zlib_dir"
+		write_download
+		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
+		write_configure
+		cmake . \
+			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
+			-DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
+			-DCMAKE_INSTALL_LIBDIR=lib \
+			-DCMAKE_BUILD_TYPE=Release \
+			$CMAKE_GLOBAL_EXTRA_FLAGS \
+			$CMAKE_LIBZIP_EXTRA_FLAGS \
+			$EXTRA_FLAGS \
+			>> "$DIR/install.log" 2>&1
+		write_compile
+		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$zstd_dir"
+	fi
+	write_install
+	make install >> "$DIR/install.log" 2>&1
+	cd ..
+	write_done
+}
+
 cd "$LIB_BUILD_DIR"
 
+build_zstd
 build_zlib
 build_gmp
 build_openssl
@@ -1037,6 +1073,8 @@ else
 	get_github_extension "pthreads" "$EXT_PTHREADS_VERSION" "pmmp" "ext-pmmpthread" #"v" needed for release tags because github removes the "v"
 	THREAD_EXT_FLAGS="--enable-pthreads"
 fi
+
+get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
@@ -1138,6 +1176,7 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --exec-prefix="$INSTALL_DIR" \
 --with-curl \
 --with-zlib \
+--with-libzstd \
 --with-zlib \
 --with-gmp \
 --with-yaml \
@@ -1190,6 +1229,7 @@ $HAVE_MYSQLI \
 --enable-recursionguard \
 --enable-xxhash \
 --enable-arraydebug \
+--enable-zstd \
 $HAVE_VALGRIND \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
