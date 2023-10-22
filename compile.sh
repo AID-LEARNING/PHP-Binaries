@@ -1004,11 +1004,11 @@ function build_zstd {
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
 		write_caching
-		cd "$zstd_dir"
+		cd "$zstd_dir/build/cmake"
 	fi
 	write_install
 	make install >> "$DIR/install.log" 2>&1
-	cd ..
+	cd ../../..
 	write_done
 }
 
