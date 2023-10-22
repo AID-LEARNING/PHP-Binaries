@@ -980,9 +980,9 @@ function build_libdeflate {
 
 function build_zstd {
 	if [ "$DO_STATIC" == "yes" ]; then
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=OFF"
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=ON -DLIBDEFLATE_BUILD_SHARED_LIB=OFF"
 	else
-		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=OFF -DLIBDEFLATE_BUILD_SHARED_LIB=ON"
 	fi
 	write_library zstd "$LIBZTD_VERSION"
 	local zstd_dir="./zstd-$LIBZTD_VERSION"
@@ -1015,7 +1015,6 @@ function build_zstd {
 
 cd "$LIB_BUILD_DIR"
 
-build_zstd
 build_zlib
 build_gmp
 build_openssl
@@ -1031,6 +1030,7 @@ else
 	HAS_GD=""
 	HAS_LIBJPEG=""
 fi
+build_zstd
 build_libxml2
 build_libzip
 build_sqlite3
