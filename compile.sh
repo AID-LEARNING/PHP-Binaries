@@ -981,9 +981,7 @@ function build_libdeflate {
 function build_zstd {
 	if [ "$DO_STATIC" != "yes" ]; then
 		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_SHARED_LIB=ON"
-	else
-		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
-	  fi
+	fi
 	write_library zstd "$LIBZTD_VERSION"
 	local zstd_dir="./zstd-$LIBZTD_VERSION"
 
