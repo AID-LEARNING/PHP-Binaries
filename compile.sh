@@ -991,6 +991,7 @@ function build_zstd {
 		rm -rf "$zlib_dir"
 		write_download
 		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
+		cd "$zlib_dir"
 		write_configure
 		cmake . \
 			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
@@ -1014,6 +1015,7 @@ function build_zstd {
 
 cd "$LIB_BUILD_DIR"
 
+build_zstd
 build_zlib
 build_gmp
 build_openssl
@@ -1029,7 +1031,6 @@ else
 	HAS_GD=""
 	HAS_LIBJPEG=""
 fi
-build_zstd
 build_libxml2
 build_libzip
 build_sqlite3
