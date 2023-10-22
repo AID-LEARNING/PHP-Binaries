@@ -982,7 +982,7 @@ function build_zstd {
 	if [ "$DO_STATIC" == "yes" ]; then
 		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
 	else
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_SHARED_LIB=ON"
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=ON"
 	fi
 	write_library zstd "$LIBZTD_VERSION"
 	local zstd_dir="./zstd-$LIBZTD_VERSION"
@@ -999,7 +999,7 @@ function build_zstd {
 			-DCMAKE_INSTALL_LIBDIR=lib \
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS
+			$CMAKE_LIBZSTD_EXTRA_FLAGS  >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
@@ -1073,8 +1073,6 @@ else
 	get_github_extension "pthreads" "$EXT_PTHREADS_VERSION" "pmmp" "ext-pmmpthread" #"v" needed for release tags because github removes the "v"
 	THREAD_EXT_FLAGS="--enable-pthreads"
 fi
-
-get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
@@ -1176,13 +1174,13 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --exec-prefix="$INSTALL_DIR" \
 --with-curl \
 --with-zlib \
---with-libzstd \
 --with-zlib \
 --with-gmp \
 --with-yaml \
 --with-openssl \
 --with-zip \
 --with-libdeflate \
+--with-libzstd \
 $HAS_LIBJPEG \
 $HAS_GD \
 --with-leveldb="$INSTALL_DIR" \
@@ -1216,6 +1214,7 @@ $THREAD_EXT_FLAGS \
 --enable-static=yes \
 --enable-shmop \
 --enable-zts \
+--enable-zstd \
 --disable-short-tags \
 $HAVE_PCNTL \
 $HAVE_MYSQLI \
@@ -1229,7 +1228,6 @@ $HAVE_MYSQLI \
 --enable-recursionguard \
 --enable-xxhash \
 --enable-arraydebug \
---enable-zstd \
 $HAVE_VALGRIND \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
@@ -1325,6 +1323,19 @@ if [ "$COMPILE_TARGET" == "mac-"* ]; then
 	echo "pcre.jit=off" >> "$INSTALL_DIR/bin/php.ini"
 fi
 
+write_done
+
+get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
+cd php-ext-zstd
+write_library "php-ext-zstd" "$EXT_ZSTD_VERSION"
+"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
+./configure
+write_compile
+make -j4 >> "$DIR/install.log" 2>&1
+write_install
+make install >> "$DIR/install.log" 2>&1
+echo "" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+echo "extension=zstd.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
