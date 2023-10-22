@@ -979,17 +979,19 @@ function build_libdeflate {
 }
 
 function build_zstd {
-	if [ "$DO_STATIC" != "yes" ]; then
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_SHARED_LIB=ON"
+	if [ "$DO_STATIC" == "yes" ]; then
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=ON -DLIBDEFLATE_BUILD_SHARED_LIB=OFF"
+	else
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DLIBDEFLATE_BUILD_STATIC_LIB=OFF -DLIBDEFLATE_BUILD_SHARED_LIB=ON"
 	fi
 	write_library zstd "$LIBZTD_VERSION"
 	local zstd_dir="./zstd-$LIBZTD_VERSION"
 
 	if cant_use_cache "$zstd_dir"; then
-		rm -rf "$zlib_dir"
+		rm -rf "$zstd_dir"
 		write_download
 		download_github_src "facebook/zstd" "v$LIBZTD_VERSION" "zstd" | tar -zx >> "$DIR/install.log" 2>&1
-		cd "$zlib_dir"
+		cd "$zstd_dir"
 		write_configure
 		cmake . \
 			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
@@ -997,7 +999,7 @@ function build_zstd {
 			-DCMAKE_INSTALL_LIBDIR=lib \
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS
+			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
