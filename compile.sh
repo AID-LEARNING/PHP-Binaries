@@ -1231,11 +1231,8 @@ $HAVE_MYSQLI \
 --enable-recursionguard \
 --enable-xxhash \
 --enable-arraydebug \
-<<<<<<< HEAD
 --enable-zstd \
-=======
 --enable-encoding \
->>>>>>> upstream/php/8.2
 $HAVE_VALGRIND \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
