@@ -28,6 +28,7 @@ EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.2.0"
 EXT_ENCODING_VERSION="0.2.3"
+EXT_ZSTD_VERSION="0.13.1"
 
 function write_out {
 	echo "[$1] $2"
@@ -1230,8 +1231,11 @@ $HAVE_MYSQLI \
 --enable-recursionguard \
 --enable-xxhash \
 --enable-arraydebug \
+<<<<<<< HEAD
 --enable-zstd \
+=======
 --enable-encoding \
+>>>>>>> upstream/php/8.2
 $HAVE_VALGRIND \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
