@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        pm-version-major: [4, 5]
+        pm-version-major: [5]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install tools and dependencies
         run: |
@@ -78,7 +78,7 @@ jobs:
     if: ${{ startsWith(github.ref_name, 'php/') && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Set version information
         id: version
@@ -122,6 +122,8 @@ jobs:
         with:
           artifacts: |
             ${{ github.workspace }}/Linux-PM*/*.tar.gz
+            ${{ github.workspace }}/MacOS-PM*/*.tar.gz
+            ${{ github.workspace }}/Windows-PM*/*.zip
           makeLatest: ${{ github.ref_name == github.event.repository.default_branch }}
           name: PHP ${{ steps.version.outputs.PHP_VERSION }} - Latest (Build ${{ github.run_number }})
           tag: php-${{ steps.version.outputs.PHP_VERSION }}-latest
@@ -136,6 +138,8 @@ jobs:
         with:
           artifacts: |
             ${{ github.workspace }}/Linux-PM*/*.tar.gz
+            ${{ github.workspace }}/MacOS-PM*/*.tar.gz
+            ${{ github.workspace }}/Windows-PM*/*.zip
           makeLatest: false
           name: PHP ${{ steps.version.outputs.PHP_VERSION }} (Build ${{ github.run_number }})
           tag: php-${{ steps.version.outputs.PHP_VERSION }}-build-${{ github.run_number }}
