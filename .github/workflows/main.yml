@@ -73,7 +73,7 @@ jobs:
 
   publish:
     name: Publish binaries
-    needs: [linux, macos, windows]
+    needs: [linux]
     runs-on: ubuntu-20.04
     if: ${{ startsWith(github.ref_name, 'php/') && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
 
