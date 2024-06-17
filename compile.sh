@@ -30,6 +30,7 @@ EXT_ENCODING_VERSION="0.3.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
+LIBPHPCPP_VERSION="2.4.2"
 
 function write_out {
 	echo "[$1] $2"
@@ -1006,7 +1007,7 @@ function build_zstd {
 			-DCMAKE_INSTALL_LIBDIR=lib \
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS
+			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
@@ -1019,8 +1020,28 @@ function build_zstd {
 	write_done
 }
 
-cd "$LIB_BUILD_DIR"
+function build_php_cpp {
+	write_library "php-cpp" "$LIBPHPCPP_VERSION"
+	local php_cpp_dir="./PHP-CPP-$LIBPHPCPP_VERSION"
 
+	if cant_use_cache "$php_cpp_dir"; then
+		rm -rf "$php_cpp_dir"
+		write_download
+		download_github_src "CopernicaMarketingSoftware/PHP-CPP" "v$LIBPHPCPP_VERSION" "php-cpp" | tar -zx >> "$DIR/install.log" 2>&1
+		cd "$php_cpp_dir"
+		write_compile
+		make -j $THREADS INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" # >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$php_cpp_dir"
+	fi
+	write_install
+	make install INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" #>> "$DIR/install.log" 2>&1
+	cd ..
+	write_done
+}
+
+cd "$LIB_BUILD_DIR"
 build_zstd
 build_zlib
 build_gmp
@@ -1223,6 +1244,8 @@ $HAS_DEBUG \
 --disable-short-tags \
 $HAVE_PCNTL \
 $HAVE_MYSQLI \
+--with-pgsq \
+--with-pdo-pgsql \
 --enable-bcmath \
 --enable-cli \
 --enable-ftp \
@@ -1323,12 +1346,16 @@ if [ "$HAVE_OPCACHE" == "yes" ]; then
 		echo "opcache.jit_buffer_size=128M" >> "$INSTALL_DIR/bin/php.ini"
 	fi
 fi
+
+
 if [ "$COMPILE_TARGET" == "mac-"* ]; then
 	#we don't have permission to allocate executable memory on macOS due to not being codesigned
 	#workaround this for now by disabling PCRE JIT
 	echo "" >> "$INSTALL_DIR/bin/php.ini"
 	echo "pcre.jit=off" >> "$INSTALL_DIR/bin/php.ini"
 fi
+
+build_php_cpp
 
 write_done
 
