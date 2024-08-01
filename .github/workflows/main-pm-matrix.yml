@@ -34,7 +34,7 @@ jobs:
           # Used "set -ex" instead of hashbang since script isn't executed with hashbang
           set -ex
           trap "exit 1" ERR
-          ./compile.sh -t linux64 -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D
+          ./compile.sh -t linux64 -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -n
 
       - name: Create tarball
         run: |
