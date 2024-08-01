@@ -30,6 +30,7 @@ EXT_ENCODING_VERSION="0.3.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
+EXT_PHPREDIS_VERSION="6.0.2"
 
 function write_out {
 	echo "[$1] $2"
@@ -1331,6 +1332,20 @@ if [ "$COMPILE_TARGET" == "mac-"* ]; then
 fi
 
 write_done
+
+get_github_extension "phpredis" "$EXT_PHPREDIS_VERSION" "phpredis" "phpredis"
+write_library "phpredis" "$EXT_PHPREDIS_VERSION"
+cd "$BUILD_DIR/php/ext/phpredis"
+write_configure
+"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
+./configure --enable-redis-igbinary --enable-redis-zstd --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+write_compile
+make -j4 >> "$DIR/install.log" 2>&1
+write_install
+make install >> "$DIR/install.log" 2>&1
+echo ";REDIS Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
 	get_github_extension "xdebug" "$EXT_XDEBUG_VERSION" "xdebug" "xdebug"
