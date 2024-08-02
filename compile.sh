@@ -31,6 +31,8 @@ EXT_ENCODING_VERSION="0.3.0"
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
 EXT_PHPREDIS_VERSION="6.0.2"
+EXT_MONGODB_DRIVER_VERSION="1.19.3"
+EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
 
 function write_out {
 	echo "[$1] $2"
@@ -1108,6 +1110,8 @@ get_github_extension "arraydebug" "$EXT_ARRAYDEBUG_VERSION" "pmmp" "ext-arraydeb
 
 get_github_extension "encoding" "$EXT_ENCODING_VERSION" "pmmp" "ext-encoding"
 
+#get_github_extension "vanillagenerator" "$EXT_VANILLAGENERATOR_VERSION" "NetherGamesMC" "ext-vanillagenerator"
+
 write_library "PHP" "$PHP_VERSION"
 
 write_configure
@@ -1188,6 +1192,8 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --with-openssl \
 --with-zip \
 --with-libdeflate \
+--with-mongodb-system-libs="yes" \
+--with-mongodb-ssl \
 $HAS_LIBJPEG \
 $HAS_GD \
 --with-leveldb="$INSTALL_DIR" \
@@ -1344,6 +1350,22 @@ write_install
 make install >> "$DIR/install.log" 2>&1
 echo ";REDIS Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+write_done
+
+get_github_extension "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION" "mongodb" "mongo-php-driver"
+write_library "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION"
+cd "$BUILD_DIR/php/ext/mongo-php-driver"
+git submodule update --init
+write_configure
+"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
+./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+write_compile
+make -j4 >> "$DIR/install.log" 2>&1
+write_install
+make install >> "$DIR/install.log" 2>&1
+echo ";MongoDB Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+write_done
 
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
