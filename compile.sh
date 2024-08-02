@@ -1192,7 +1192,6 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --with-openssl \
 --with-zip \
 --with-libdeflate \
---with-mongodb-ssl \
 $HAS_LIBJPEG \
 $HAS_GD \
 --with-leveldb="$INSTALL_DIR" \
@@ -1241,6 +1240,10 @@ $HAVE_MYSQLI \
 --enable-zstd \
 --enable-encoding \
 $HAVE_VALGRIND \
+--with-libbson="yes" \
+--with--libmongoc="yes" \
+--with-mongodb-system-libs="yes" \
+--with-mongodb-ssl="auto"
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
 if [ "$COMPILE_FOR_ANDROID" == "yes" ]; then
@@ -1350,9 +1353,8 @@ make install >> "$DIR/install.log" 2>&1
 echo ";REDIS Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
-
-get_github_extension "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION" "mongodb" "mongo-php-driver"
-write_library "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION"
+write_download "mongo-php-driver"
+git clone https://github.com/mongodb/mongo-php-driver.git  >> "$DIR/install.log" 2>&1
 cd "$BUILD_DIR/php/ext/mongo-php-driver"
 git submodule update --init >> "$DIR/install.log" 2>&1
 write_configure
