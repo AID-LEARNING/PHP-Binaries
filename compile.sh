@@ -1192,7 +1192,6 @@ RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLA
 --with-openssl \
 --with-zip \
 --with-libdeflate \
---with-mongodb-system-libs="yes" \
 --with-mongodb-ssl \
 $HAS_LIBJPEG \
 $HAS_GD \
@@ -1355,7 +1354,7 @@ write_done
 get_github_extension "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION" "mongodb" "mongo-php-driver"
 write_library "mongo-php-driver" "$EXT_MONGODB_DRIVER_VERSION"
 cd "$BUILD_DIR/php/ext/mongo-php-driver"
-git submodule update --init
+git submodule update --init >> "$DIR/install.log" 2>&1
 write_configure
 "$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
 ./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
