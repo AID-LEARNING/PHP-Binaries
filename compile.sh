@@ -1240,10 +1240,7 @@ $HAVE_MYSQLI \
 --enable-zstd \
 --enable-encoding \
 $HAVE_VALGRIND \
---with-libbson="yes" \
---with--libmongoc="yes" \
---with-mongodb-system-libs="yes" \
---with-mongodb-ssl="auto"
+--with-mongodb-ssl \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
 if [ "$COMPILE_FOR_ANDROID" == "yes" ]; then
