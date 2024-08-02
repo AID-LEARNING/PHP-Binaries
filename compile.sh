@@ -1350,8 +1350,10 @@ make install >> "$DIR/install.log" 2>&1
 echo ";REDIS Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
+
 write_download "mongo-php-driver"
 git clone https://github.com/mongodb/mongo-php-driver.git  >> "$DIR/install.log" 2>&1
+mv "mongo-php-driver" "$BUILD_DIR/php/ext/mongo-php-driver"
 cd "$BUILD_DIR/php/ext/mongo-php-driver"
 git submodule update --init >> "$DIR/install.log" 2>&1
 write_configure
