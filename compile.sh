@@ -31,8 +31,9 @@ EXT_ENCODING_VERSION="0.3.0"
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
 EXT_PHPREDIS_VERSION="6.0.2"
-EXT_MONGODB_DRIVER_VERSION="1.19.3"
+EXT_MONGODB_DRIVER_VERSION="v1.19.3"
 EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
+EXT_ZEPHIR_VERSION="1.6.1"
 
 function write_out {
 	echo "[$1] $2"
@@ -1360,11 +1361,24 @@ write_configure
 "$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
 ./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
 write_compile
-make -j4 >> "$DIR/install.log" 2>&1
+make -j 4 >> "$DIR/install.log" 2>&1
 write_install
 make install >> "$DIR/install.log" 2>&1
 echo ";MongoDB Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+write_done
+
+get_github_extension "php-zephir-parser" "$EXT_ZEPHIR_VERSION" "zephir-lang" "php-zephir-parser"
+cd "$BUILD_DIR/php/ext/php-zephir-parser"
+write_configure
+"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
+./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+write_compile
+make -j 4 >> "$DIR/install.log" 2>&1
+write_install
+make install >> "$DIR/install.log" 2>&1
+echo ";Zephir Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+echo "extension=zephir_parser.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
 
