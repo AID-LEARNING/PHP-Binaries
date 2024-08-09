@@ -1369,7 +1369,8 @@ echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
 write_download "php-zephir-parser"
-git clone github.com/zephir-lang/php-zephir-parser.git "$BUILD_DIR/php/ext/php-zephir-parser"
+git clone https://github.com/zephir-lang/php-zephir-parser.git
+mv "php-zephir-parser" "$BUILD_DIR/php/ext/php-zephir-parser"
 #get_github_extension "php-zephir-parser" "$EXT_ZEPHIR_VERSION" "zephir-lang" "php-zephir-parser"
 cd "$BUILD_DIR/php/ext/php-zephir-parser"
 write_configure
