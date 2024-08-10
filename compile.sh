@@ -34,6 +34,7 @@ EXT_PHPREDIS_VERSION="6.0.2"
 EXT_MONGODB_DRIVER_VERSION="v1.19.3"
 EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
 EXT_ZEPHIR_VERSION="v1.6.1"
+LIBPHPCPP_VERSION="v2.4.3"
 
 function write_out {
 	echo "[$1] $2"
@@ -1023,6 +1024,27 @@ function build_zstd {
 	write_done
 }
 
+function build_php_cpp {
+	write_library "php-cpp" "$LIBPHPCPP_VERSION"
+	local php_cpp_dir="./PHP-CPP-$LIBPHPCPP_VERSION"
+
+	if cant_use_cache "$php_cpp_dir"; then
+		rm -rf "$php_cpp_dir"
+		write_download
+		download_github_src "CopernicaMarketingSoftware/PHP-CPP" "$LIBPHPCPP_VERSION" "php-cpp" | tar -zx >> "$DIR/install.log" 2>&1
+		cd "$php_cpp_dir"
+		write_compile
+		make -j $THREADS INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$php_cpp_dir"
+	fi
+	write_install
+	make install INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+	cd ..
+	write_done
+}
+
 cd "$LIB_BUILD_DIR"
 
 build_zstd
@@ -1368,21 +1390,7 @@ echo ";MongoDB Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
-write_download "php-zephir-parser"
-git clone https://github.com/zephir-lang/php-zephir-parser.git  >> "$DIR/install.log" 2>&1
-mv "php-zephir-parser" "$BUILD_DIR/php/ext/php-zephir-parser"  >> "$DIR/install.log" 2>&1
-cd "$BUILD_DIR/php/ext/php-zephir-parser"
-write_configure
-"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
-./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
-write_compile
-make -j 4 >> "$DIR/install.log" 2>&1
-write_install
-make install >> "$DIR/install.log" 2>&1
-echo ";Zephir Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-echo "extension=zephir_parser.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-write_done
-
+build_php_cpp
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
 	get_github_extension "xdebug" "$EXT_XDEBUG_VERSION" "xdebug" "xdebug"
