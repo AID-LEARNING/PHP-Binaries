@@ -34,7 +34,7 @@ EXT_PHPREDIS_VERSION="6.0.2"
 EXT_MONGODB_DRIVER_VERSION="v1.19.3"
 EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
 EXT_ZEPHIR_VERSION="v1.6.1"
-LIBPHPCPP_VERSION="v2.4.3"
+LIBPHPCPP_VERSION="2.4.3"
 
 function write_out {
 	echo "[$1] $2"
@@ -1011,7 +1011,7 @@ function build_zstd {
 			-DCMAKE_INSTALL_LIBDIR=lib \
 			-DCMAKE_BUILD_TYPE=Release \
 			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS
+			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
 	else
@@ -1031,7 +1031,7 @@ function build_php_cpp {
 	if cant_use_cache "$php_cpp_dir"; then
 		rm -rf "$php_cpp_dir"
 		write_download
-		download_github_src "CopernicaMarketingSoftware/PHP-CPP" "$LIBPHPCPP_VERSION" "php-cpp" | tar -zx >> "$DIR/install.log" 2>&1
+		download_github_src "CopernicaMarketingSoftware/PHP-CPP" "v$LIBPHPCPP_VERSION" "php-cpp" | tar -zx >> "$DIR/install.log" 2>&1
 		cd "$php_cpp_dir"
 		write_compile
 		make -j $THREADS INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1 && mark_cache
