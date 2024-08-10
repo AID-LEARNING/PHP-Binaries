@@ -1354,7 +1354,7 @@ write_done
 
 write_download "mongo-php-driver"
 git clone https://github.com/mongodb/mongo-php-driver.git  >> "$DIR/install.log" 2>&1
-mv "mongo-php-driver" "$BUILD_DIR/php/ext/mongo-php-driver"
+mv "mongo-php-driver" "$BUILD_DIR/php/ext/mongo-php-driver"  >> "$DIR/install.log" 2>&1
 cd "$BUILD_DIR/php/ext/mongo-php-driver"
 git submodule update --init >> "$DIR/install.log" 2>&1
 write_configure
@@ -1369,9 +1369,8 @@ echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
 write_download "php-zephir-parser"
-git clone https://github.com/zephir-lang/php-zephir-parser.git
-mv "php-zephir-parser" "$BUILD_DIR/php/ext/php-zephir-parser"
-#get_github_extension "php-zephir-parser" "$EXT_ZEPHIR_VERSION" "zephir-lang" "php-zephir-parser"
+git clone https://github.com/zephir-lang/php-zephir-parser.git  >> "$DIR/install.log" 2>&1
+mv "php-zephir-parser" "$BUILD_DIR/php/ext/php-zephir-parser"  >> "$DIR/install.log" 2>&1
 cd "$BUILD_DIR/php/ext/php-zephir-parser"
 write_configure
 "$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
