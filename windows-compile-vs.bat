@@ -3,7 +3,7 @@
 REM For future users: This file MUST have CRLF line endings. If it doesn't, lots of inexplicable undesirable strange behaviour will result.
 REM Also: Don't modify this version with sed, or it will screw up your line endings.
 set PHP_MAJOR_VER=8.2
-set PHP_VER=%PHP_MAJOR_VER%.17
+set PHP_VER=%PHP_MAJOR_VER%.25
 set PHP_GIT_REV=php-%PHP_VER%
 set PHP_DISPLAY_VER=%PHP_VER%
 set PHP_SDK_VER=2.2.0
@@ -18,22 +18,29 @@ if "%PHP_DEBUG_BUILD%"=="" (
 set MSBUILD_CONFIGURATION=RelWithDebInfo
 set PHP_JIT_ENABLE_ARG=off
 
+REM NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
+REM Use commit hashes to avoid this.
+
 set LIBYAML_VER=0.2.5
 set PTHREAD_W32_VER=3.0.0
+REM release not tagged
 set LEVELDB_MCPE_VER=1c7564468b41610da4f498430e795ca4de0931ff
-set LIBDEFLATE_VER=dd12ff2b36d603dbb7fa8838fe7e7176fcbd4f6f
+REM 1.22 - see above note about "v" prefixes
+set LIBDEFLATE_VER=2335c047e91cac6fd04cb0fd2769380395149f15
 
 set PHP_PMMPTHREAD_VER=6.1.0
-set PHP_YAML_VER=2.2.3
+set PHP_YAML_VER=2.2.4
 set PHP_CHUNKUTILS2_VER=0.3.5
-set PHP_IGBINARY_VER=3.2.15
+set PHP_IGBINARY_VER=3.2.16
+REM release not tagged
 set PHP_LEVELDB_VER=317fdcd8415e1566fc2835ce2bdb8e19b890f9f3
+REM release not tagged
 set PHP_CRYPTO_VER=abbe7cbf869f96e69f2ce897271a61d32f43c7c0
 set PHP_RECURSIONGUARD_VER=0.1.0
 set PHP_MORTON_VER=0.1.2
 set PHP_LIBDEFLATE_VER=0.2.1
 set PHP_XXHASH_VER=0.2.0
-set PHP_XDEBUG_VER=3.3.1
+set PHP_XDEBUG_VER=3.3.2
 set PHP_ARRAYDEBUG_VER=0.2.0
 set PHP_ENCODING_VER=0.3.0
 
