@@ -34,6 +34,7 @@ EXT_ENCODING_VERSION="0.3.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
+LIBSNAPPY_VERSION="1.2.1"
 EXT_SNAPPY_VERSION="0.2.2"
 EXT_PHPREDIS_VERSION="6.0.2"
 EXT_MONGODB_DRIVER_VERSION="v1.19.3"
@@ -721,7 +722,7 @@ function build_curl {
 		--without-libidn2 \
 		--without-brotli \
 		--without-nghttp2 \
-		--without-zstd \
+		--with-zstd="$INSTALL_DIR" \
 		--with-zlib="$INSTALL_DIR" \
 		--with-ssl="$INSTALL_DIR" \
 		--enable-threaded-resolver \
@@ -1074,6 +1075,39 @@ function build_zstd {
 	make install >> "$DIR/install.log" 2>&1
 	cd ../../..
 	write_done
+
+function build_snappy {
+	if [ "$DO_STATIC" == "yes" ]; then
+		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
+	else
+		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=ON"
+	fi
+	write_library snappy "$LIBSNAPPY_VERSION"
+	local snappy_dir="./snappy-$LIBSNAPPY_VERSION"
+
+	if cant_use_cache "$snappy_dir"; then
+		rm -rf "$snappy_dir"
+		write_download
+		download_github_src "google/snappy" "$LIBSNAPPY_VERSION" "snappy" | tar -zx >> "$DIR/install.log" 2>&1
+		cd "$snappy_dir/build/cmake"
+		write_configure
+		cmake . \
+			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
+			-DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
+			-DCMAKE_INSTALL_LIBDIR=lib \
+			-DCMAKE_BUILD_TYPE=Release \
+			$CMAKE_GLOBAL_EXTRA_FLAGS \
+			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
+		write_compile
+		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$snappy_dir/build/cmake"
+	fi
+	write_install
+	make install >> "$DIR/install.log" 2>&1
+	cd ../../..
+	write_done
 }
 
 function build_php_cpp {
@@ -1100,6 +1134,7 @@ function build_php_cpp {
 cd "$LIB_BUILD_DIR"
 
 build_zstd
+build_snappy
 build_zlib
 build_gmp
 build_openssl
@@ -1156,7 +1191,10 @@ get_github_extension "pmmpthread" "$EXT_PMMPTHREAD_VERSION" "pmmp" "ext-pmmpthre
 
 get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 
-get_github_extension "snappy" "$EXT_SNAPPY_VERSION" "kjdev" "php-ext-snappy"
+echo -n "  snappy: downloading $EXT_SNAPPY_VERSION..."
+git clone --branch $EXT_SNAPPY_VERSION --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git  "$BUILD_DIR/php/ext/snappy" >> "$DIR/install.log" 2>&1
+write_done
+
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
@@ -1315,6 +1353,7 @@ $HAVE_MYSQLI \
 --enable-xxhash \
 --enable-arraydebug \
 --enable-zstd \
+--enable-snappy \
 --enable-encoding \
 $HAVE_VALGRIND \
 --with-mongodb-ssl \
