@@ -1075,39 +1075,6 @@ function build_zstd {
 	make install >> "$DIR/install.log" 2>&1
 	cd ../../..
 	write_done
-
-function build_snappy {
-	if [ "$DO_STATIC" == "yes" ]; then
-		local CMAKE_LIBZSTD_EXTRA_FLAGS=""
-	else
-		local CMAKE_LIBZSTD_EXTRA_FLAGS="-DBUILD_SHARED_LIBS=ON"
-	fi
-	write_library snappy "$LIBSNAPPY_VERSION"
-	local snappy_dir="./snappy-$LIBSNAPPY_VERSION"
-
-	if cant_use_cache "$snappy_dir"; then
-		rm -rf "$snappy_dir"
-		write_download
-		download_github_src "google/snappy" "$LIBSNAPPY_VERSION" "snappy" | tar -zx >> "$DIR/install.log" 2>&1
-		cd "$snappy_dir/build/cmake"
-		write_configure
-		cmake . \
-			-DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
-			-DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
-			-DCMAKE_INSTALL_LIBDIR=lib \
-			-DCMAKE_BUILD_TYPE=Release \
-			$CMAKE_GLOBAL_EXTRA_FLAGS \
-			$CMAKE_LIBZSTD_EXTRA_FLAGS >> "$DIR/install.log" 2>&1
-		write_compile
-		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
-	else
-		write_caching
-		cd "$snappy_dir/build/cmake"
-	fi
-	write_install
-	make install >> "$DIR/install.log" 2>&1
-	cd ../../..
-	write_done
 }
 
 function build_php_cpp {
@@ -1134,7 +1101,6 @@ function build_php_cpp {
 cd "$LIB_BUILD_DIR"
 
 build_zstd
-build_snappy
 build_zlib
 build_gmp
 build_openssl
