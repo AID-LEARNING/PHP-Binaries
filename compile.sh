@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-[ -z "$PHP_VERSION" ] && PHP_VERSION="8.2.25"
+PHP_VERSIONS=("8.2.25" "8.3.13")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
+
 
 ZLIB_VERSION="1.3.1"
 GMP_VERSION="6.3.0"
@@ -33,6 +34,7 @@ EXT_ENCODING_VERSION="0.3.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
+EXT_SNAPPY_VERSION="0.2.2"
 EXT_PHPREDIS_VERSION="6.0.2"
 EXT_MONGODB_DRIVER_VERSION="v1.19.3"
 EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
@@ -159,10 +161,12 @@ COMPILE_GD="no"
 PM_VERSION_MAJOR=""
 
 DOWNLOAD_INSECURE="no"
-DOWNLOAD_CACHE=""
+DOWNLOAD_CACHE="$DIR/download_cache"
 SEPARATE_SYMBOLS="no"
 
-while getopts "::t:j:sdDxfgnva:P:c:l:Ji" OPTION; do
+PHP_VERSION_BASE="auto"
+
+while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:" OPTION; do
 
 	case $OPTION in
 		l)
@@ -238,6 +242,9 @@ while getopts "::t:j:sdDxfgnva:P:c:l:Ji" OPTION; do
 			write_out "WARNING" "This is a security risk, please only use this if you know what you are doing!"
 			DOWNLOAD_INSECURE="yes"
 			;;
+		z)
+			PHP_VERSION_BASE="$OPTARG"
+			;;
 		\?)
 			write_error "Invalid option: -$OPTARG"
 			exit 1
@@ -245,15 +252,57 @@ while getopts "::t:j:sdDxfgnva:P:c:l:Ji" OPTION; do
 	esac
 done
 
-if [ "$PM_VERSION_MAJOR" == "" ]; then
-	write_error "Please specify PocketMine-MP major version target with -P (e.g. -P5)"
-	exit 1
-elif [ "$PM_VERSION_MAJOR" -lt 5 ]; then
-	write_error "PocketMine-MP 4.x and older are no longer supported"
+function php_version_id {
+	local PHP_VERSION="$1"
+	local PHP_VERSION_MAJOR=$(echo "$PHP_VERSION" | cut -d. -f1)
+	local PHP_VERSION_MINOR=$(echo "$PHP_VERSION" | cut -d. -f2)
+	#TODO: patch is a pain because of suffixes and we don't really need it anyway
+
+	# Use this for switching PHP version specific logic
+	local PHP_VERSION_ID=$(((PHP_VERSION_MAJOR * 10000) + (PHP_VERSION_MINOR * 100)))
+	echo "$PHP_VERSION_ID"
+}
+
+PREFERRED_PHP_VERSION_BASE=""
+case $PM_VERSION_MAJOR in
+	5)
+		PREFERRED_PHP_VERSION_BASE="8.2"
+		;;
+	"")
+		write_error "Please specify PocketMine-MP major version target with -P (e.g. -P5)"
+		exit 1
+		;;
+	\?)
+		write_error "PocketMine-MP $PM_VERSION_MAJOR is not supported by this version of the build script"
+		exit 1
+		;;
+esac
+
+write_out "opt" "Compiling with configuration for PocketMine-MP $PM_VERSION_MAJOR"
+
+if [ "$PHP_VERSION_BASE" == "auto" ]; then
+	PHP_VERSION_BASE="$PREFERRED_PHP_VERSION_BASE"
+elif [ "$PHP_VERSION_BASE" != "$PREFERRED_PHP_VERSION_BASE" ]; then
+	#TODO: validate that this PHP version is able to be used
+	write_out "WARNING" "$PHP_VERSION_BASE is not the default for PocketMine-MP $PM_VERSION_MAJOR"
+	write_out "WARNING" "The build may fail, or you may not be able to use the resulting PHP binary"
+fi
+
+for version in "${PHP_VERSIONS[@]}"; do
+	if [[ "$version" == "$PHP_VERSION_BASE."* ]]; then
+		PHP_VERSION="$version"
+		break
+	fi
+done
+
+if [ "$PHP_VERSION" == "" ]; then
+	write_error "Unsupported PHP base version $PHP_VERSION_BASE"
+	write_error "Example inputs: 8.2, 8.3"
 	exit 1
 fi
 
-write_out "opt" "Compiling with configuration for PocketMine-MP $PM_VERSION_MAJOR"
+PHP_VERSION_ID=$(php_version_id "$PHP_VERSION")
+write_out "opt" "Selected PHP $PHP_VERSION ($PHP_VERSION_ID)"
 
 #Needed to use aliases
 shopt -s expand_aliases
@@ -1107,6 +1156,8 @@ get_github_extension "pmmpthread" "$EXT_PMMPTHREAD_VERSION" "pmmp" "ext-pmmpthre
 
 get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 
+get_github_extension "snappy" "$EXT_SNAPPY_VERSION" "kjdev" "php-ext-snappy"
+
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
 
@@ -1267,6 +1318,7 @@ $HAVE_MYSQLI \
 --enable-encoding \
 $HAVE_VALGRIND \
 --with-mongodb-ssl \
+--with-ffi \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
 if [ "$COMPILE_FOR_ANDROID" == "yes" ]; then

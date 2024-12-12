@@ -1,7 +1,18 @@
-# Custom PHP build scripts for PocketMine-MP
+# PHP binaries & PHP build scripts for PocketMine-MP
 [![Build status](https://github.com/pmmp/php-build-scripts/actions/workflows/main.yml/badge.svg)](https://github.com/pmmp/php-build-scripts/actions/workflows/main.yml)
 
-## Looking for prebuilt binaries? Head over to [releases](https://github.com/pmmp/PHP-Binaries/releases/latest)
+## Prebuilt binaries
+### Actively updated "latest" URLs
+- [PM5 default](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-latest)
+- [PM5 PHP 8.2](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.2-latest) (default for PM 5.10+)
+- [PM5 PHP 8.3](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.3-latest) (not officially supported, but works in PM 5.9+)
+
+### Legacy binaries, no longer updated
+- [PM4 PHP 8.0](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.0-latest) (default for PM 4.0+)
+- [PM4 PHP 8.1](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.1-latest) (default for PM 4.21+)
+- [PM4 PHP 8.2](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.2-latest) (never officially supported, but works in PM 4.12+)
+- [PM5 PHP 8.0](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.0-latest) (default for PM 5.0 alpha)
+- [PM5 PHP 8.1](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.1-latest) (default for PM 5.0+)
 
 ## compile.sh
 
@@ -38,7 +49,8 @@ Bash script used to compile PHP on MacOS and Linux platforms. Make sure you have
 | -t           | Set target                                                                                                  |
 | -v           | Enable Valgrind support in PHP                                                                              |
 | -x           | Specifies we are doing cross-compile                                                                        |
-| -P           | Compiles extensions for the major PocketMine-MP version specified (can be `4` or `5`)                       |
+| -P           | Set target to the specified major PocketMine-MP version specified (currently only `5` is supported)         |
+| -z           | PHP version to build, e.g `8.2` (optional, if not specified, will be auto-selected by PM version)           |
 
 ### Example:
 
@@ -49,19 +61,20 @@ Bash script used to compile PHP on MacOS and Linux platforms. Make sure you have
 | mac64           | ``-t mac-x86-64 -j4 -P5``         |
 | android-aarch64 | ``-t android-aarch64 -x -j4 -P5`` |
 
-## windows-compile-vs.bat
+## windows-compile-vs.ps1
 
-Batch script utilizing Visual Studio on Windows to compile PHP binaries from sources.
-Ensure you have Visual Studio 2019, `git`, `7z` and `wget` installed in your PATH.
+Uses Visual Studio toolsets to compile PHP binaries on Windows.
+You need to install `git`, `cmake` and Visual Studio 2019 to use this script.
 
 This script doesn't accept parameters, but the following environment variables are influential:
 
-| Variable | Description                                                                                                        |
-| -------- |--------------------------------------------------------------------------------------------------------------------|
-| `PHP_DEBUG_BUILD` | Disables optimisations and builds PHP with detailed debugging information (useful for debugging segfaults)|
-| `SOURCES_PATH` | Where to put the downloaded sources for compilation                                                          |
-| `VS_EDITION` | Edition of Visual Studio installed, set to `Community` by default                                              |
-| `PM_VERSION_MAJOR` | Major version of PocketMine-MP to build extensions for (defaults to 4, can be `4` or `5`)                |
+| Variable | Description                                                                                                         |
+| -------- |---------------------------------------------------------------------------------------------------------------------|
+| `PHP_DEBUG_BUILD`  | Disables optimisations and builds PHP with detailed debugging information (useful for debugging segfaults)|
+| `SOURCES_PATH`     | Where to put the downloaded sources for compilation                                                       |
+| `PM_VERSION_MAJOR` | Major version of PocketMine-MP to build for (currently only `5` is supported)                             |
+| `PHP_VERSION_BASE` | PHP version to build, e.g `8.2` (optional, if not specified, will be auto-selected by PM version)         |
+| `PHP_JIT_SUPPORT`  | Whether to compile with OPcache JIT, set to `1` for yes                                                   |
 
 ## For developers: Version info sources
 ### Libraries
