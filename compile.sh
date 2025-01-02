@@ -135,10 +135,10 @@ fi
 #	export AS="llvm-as"
 #	export RANLIB=llvm-ranlib
 #else
-	export CC="clang-17"
-	export CXX="clang++-17"
+	export CC="gcc"
+	export CXX="g++"
 	#export AR="gcc-ar"
-	export RANLIB=llvm-ranlib-17
+	export RANLIB=ranlib
 #fi
 
 COMPILE_FOR_ANDROID=no
