@@ -1450,21 +1450,6 @@ echo ";MongoDB Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
 
-write_download "ext-parallel"
-cd "$BUILD_DIR/php/ext/"
-git clone https://github.com/krakjoe/parallel.git >> "$DIR/install.log" 2>&1
-cd "parallel"
-write_configure
-"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
-./configure --enable-parallel >> "$DIR/install.log" 2>&1
-write_compile
-make -j 4 >> "$DIR/install.log" 2>&1
-write_install
-make install >> "$DIR/install.log" 2>&1
-echo ";ext-parallel Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-echo "extension=parallel.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-write_done
-
 build_php_cpp
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
