@@ -1,4 +1,5 @@
 ﻿$ErrorActionPreference="Stop"
+$ProgressPreference="SilentlyContinue"
 
 $PHP_VERSIONS=@("8.2.25", "8.3.13")
 
@@ -11,7 +12,7 @@ $ARCH="x64"
 $LIBYAML_VER="0.2.5"
 $PTHREAD_W32_VER="3.0.0"
 $LEVELDB_MCPE_VER="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
-$LIBDEFLATE_VER="2335c047e91cac6fd04cb0fd2769380395149f15" #1.22 - see above note about "v" prefixes
+$LIBDEFLATE_VER="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
 
 $PHP_PMMPTHREAD_VER="6.1.0"
 $PHP_YAML_VER="2.2.4"
@@ -25,7 +26,7 @@ $PHP_LIBDEFLATE_VER="0.2.1"
 $PHP_XXHASH_VER="0.2.0"
 $PHP_XDEBUG_VER="3.3.2"
 $PHP_ARRAYDEBUG_VER="0.2.0"
-$PHP_ENCODING_VER="0.3.0"
+$PHP_ENCODING_VER="0.4.0"
 
 function pm-echo {
     param ([string] $message)
@@ -227,7 +228,9 @@ function download-file {
         echo "Cache hit for URL: $url" >> $log_file
     } else {
         echo "Downloading file from $url to $cached_path" >> $log_file
-        Invoke-WebRequest -Uri $url -OutFile $cached_path >> $log_file 2>&1
+        #download to a tmpfile first, so that we don't leave borked cache entries for later runs
+        Invoke-WebRequest -Uri $url -OutFile "$download_cache/.temp" >> $log_file 2>&1
+        Move-Item "$download_cache/.temp" $cached_path >> $log_file 2>&1
     }
     if (!(Test-Path $cached_path)) {
         pm-fatal-error "Failed to download file from $url"
@@ -235,6 +238,18 @@ function download-file {
 
     return $cached_path
 }
+
+function unzip-file {
+    param ([string] $file, [string] $destination)
+
+    #expand-archive doesn't respect script-local ProgressPreference
+    #https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/77
+    $oldProgressPref = $global:ProgressPreference
+    $global:ProgressPreference = "SilentlyContinue"
+    Expand-Archive -Path $file -DestinationPath $destination >> $log_file 2>&1
+    $global:ProgressPreference = $oldProgressPref
+}
+
 
 function append-file-utf8 {
     param ([string] $line, [string] $file)
@@ -248,7 +263,7 @@ function download-sdk {
     write-download
     $file = download-file "https://github.com/php/php-sdk-binary-tools/archive/refs/tags/php-sdk-$PHP_SDK_VER.zip" "php-sdk"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item "php-sdk-binary-tools-php-sdk-$PHP_SDK_VER" $SOURCES_PATH
     write-done
 }
@@ -284,7 +299,7 @@ function build-yaml {
     write-download
     $file = download-file "https://github.com/yaml/libyaml/archive/$LIBYAML_VER.zip" "yaml"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item "libyaml-$LIBYAML_VER" libyaml >> $log_file 2>&1
     Push-Location libyaml
 
@@ -308,7 +323,7 @@ function build-pthreads4w {
     write-download
     $file = download-file "https://github.com/pmmp/DependencyMirror/releases/download/mirror/pthreads4w-code-v$PTHREAD_W32_VER.zip" "pthreads4w"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item "pthreads4w-code-*" pthreads4w >> $log_file 2>&1
     Push-Location pthreads4w
 
@@ -330,9 +345,9 @@ function build-pthreads4w {
 function build-leveldb {
     write-library "leveldb" $LEVELDB_MCPE_VER
     write-download
-    $file = download-file "https://github.com/pmmp/leveldb/archive/$LEVELDB_MCPE_VER.zip"
+    $file = download-file "https://github.com/pmmp/leveldb/archive/$LEVELDB_MCPE_VER.zip" "leveldb"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item leveldb-* leveldb >> $log_file 2>&1
     Push-Location leveldb
 
@@ -358,9 +373,9 @@ function build-leveldb {
 function build-libdeflate {
     write-library "libdeflate" $LIBDEFLATE_VER
     write-download
-    $file = download-file "https://github.com/ebiggers/libdeflate/archive/$LIBDEFLATE_VER.zip"
+    $file = download-file "https://github.com/ebiggers/libdeflate/archive/$LIBDEFLATE_VER.zip" "libdeflate"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item libdeflate-* libdeflate >> $log_file 2>&1
     Push-Location libdeflate
 
@@ -388,7 +403,7 @@ function download-php {
 
     $file = download-file "https://github.com/php/php-src/archive/$PHP_GIT_REV.zip" "php"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     Move-Item "php-src-$PHP_GIT_REV" php-src >> $log_file 2>&1
     write-done
 }
@@ -400,7 +415,7 @@ function get-extension-zip {
     write-download
     $file = download-file $url "php-ext-$name"
     write-extracting
-    Expand-Archive -Path $file -DestinationPath $pwd >> $log_file 2>&1
+    unzip-file $file $pwd
     write-done
 }
 
@@ -595,9 +610,9 @@ append-file-utf8 "extension=php_recursionguard.dll" $php_ini
 append-file-utf8 "recursionguard.enabled=0 ;disabled due to minor performance impact, only enable this if you need it for debugging" $php_ini
 append-file-utf8 ";extension=php_arraydebug.dll" $php_ini
 append-file-utf8 "" $php_ini
-if ($PHP_JIT_ENABLE_ARG -eq "on") {
+if ($PHP_JIT_ENABLE_ARG -eq "yes") {
     append-file-utf8 "; ---- ! WARNING ! ----" $php_ini
-    append-file-utf8 "; JIT can provide big performance improvements, but as of PHP %PHP_VER% it is still unstable. For this reason, it is disabled by default." $php_ini
+    append-file-utf8 "; JIT can provide big performance improvements, but as of PHP $PHP_VER it is still unstable. For this reason, it is disabled by default." $php_ini
     append-file-utf8 "; Enable it at your own risk. See https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.jit for possible options." $php_ini
     append-file-utf8 "opcache.jit=off" $php_ini
     append-file-utf8 "opcache.jit_buffer_size=128M" $php_ini

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PHP_VERSIONS=("8.2.25" "8.3.13")
+PHP_VERSIONS=("8.2.27" "8.3.15")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
@@ -16,7 +16,7 @@ LIBJPEG_VERSION="9f"
 OPENSSL_VERSION="3.4.0"
 LIBZIP_VERSION="1.10.1"
 SQLITE3_VERSION="3450200" #3.45.2
-LIBDEFLATE_VERSION="2335c047e91cac6fd04cb0fd2769380395149f15" #1.22 - see above note about "v" prefixes
+LIBDEFLATE_VERSION="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
 
 EXT_PMMPTHREAD_VERSION="6.1.0"
 EXT_YAML_VERSION="2.2.4"
@@ -30,7 +30,7 @@ EXT_LIBDEFLATE_VERSION="0.2.1"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.2.0"
-EXT_ENCODING_VERSION="0.3.0"
+EXT_ENCODING_VERSION="0.4.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
@@ -139,6 +139,7 @@ fi
 	export CXX="g++"
 	#export AR="gcc-ar"
 	export RANLIB=ranlib
+	export STRIP="strip"
 #fi
 
 COMPILE_FOR_ANDROID=no
@@ -341,7 +342,9 @@ function download_file {
 			echo "Cache hit for URL: $url" >> "$DIR/install.log"
 		else
 			echo "Downloading file to cache: $url" >> "$DIR/install.log"
-			_download_file "$1" > "$DOWNLOAD_CACHE/$cached_filename" 2>> "$DIR/install.log"
+			#download to a tmpfile first, so that we don't leave borked cache entries for later runs
+			_download_file "$1" > "$DOWNLOAD_CACHE/.temp" 2>> "$DIR/install.log"
+			mv "$DOWNLOAD_CACHE/.temp" "$DOWNLOAD_CACHE/$cached_filename" >> "$DIR/install.log" 2>&1
 		fi
 		cat "$DOWNLOAD_CACHE/$cached_filename" 2>> "$DIR/install.log"
 	else
@@ -467,6 +470,7 @@ if [ "$TOOLCHAIN_PREFIX" != "" ]; then
 		export RANLIB="$TOOLCHAIN_PREFIX-ranlib"
 		export CPP="$TOOLCHAIN_PREFIX-cpp"
 		export LD="$TOOLCHAIN_PREFIX-ld"
+		export STRIP="$TOOLCHAIN_PREFIX-strip"
 fi
 
 echo "#include <stdio.h>" > test.c
@@ -1484,7 +1488,7 @@ function separate_symbols {
 	output_dirname="$SYMBOLS_DIR/$(dirname $libname)"
 	mkdir -p "$output_dirname" >> "$DIR/install.log" 2>&1
 	cp "$libname" "$SYMBOLS_DIR/$libname.debug" >> "$DIR/install.log" 2>&1
-	strip -S "$libname" >> "$DIR/install.log" 2>&1 || rm "$SYMBOLS_DIR/$libname.debug" #if this fails, this probably isn't an executable binary
+	"$STRIP" -S "$libname" >> "$DIR/install.log" 2>&1 || rm "$SYMBOLS_DIR/$libname.debug" #if this fails, this probably isn't an executable binary
 }
 
 if [ "$SEPARATE_SYMBOLS" != "no" ]; then
