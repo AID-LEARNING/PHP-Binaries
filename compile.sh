@@ -39,8 +39,8 @@ EXT_SNAPPY_VERSION="0.2.2"
 EXT_PHPREDIS_VERSION="6.0.2"
 EXT_MONGODB_DRIVER_VERSION="v1.19.3"
 EXT_VANILLAGENERATOR_VERSION="abd059fd2ca79888aab3b9c5070d83ceea55fada"
-EXT_ZEPHIR_VERSION="v1.6.1"
-LIBPHPCPP_VERSION="2.4.3"
+EXT_ZEPHIR_VERSION="1.7.0"
+LIBPHPCPP_VERSION="2.4.8"
 
 function write_out {
 	echo "[$1] $2"
@@ -157,9 +157,13 @@ HAVE_XDEBUG="yes"
 FSANITIZE_OPTIONS=""
 FLAGS_LTO=""
 HAVE_OPCACHE_JIT="no"
-
+ENABLE_ZEPHIR="no"
+ENABLE_PHPCPP="no"
 COMPILE_GD="no"
-
+ENABLE_REDIS="no"
+ENABLE_MONGO="no"
+HAVE_MONGO=""
+HAVE_REDIS="--disable-session"
 PM_VERSION_MAJOR=""
 
 DOWNLOAD_INSECURE="no"
@@ -168,8 +172,7 @@ SEPARATE_SYMBOLS="no"
 
 PHP_VERSION_BASE="auto"
 
-while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:" OPTION; do
-
+while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:p:E:" OPTION; do
 	case $OPTION in
 		l)
 			mkdir "$OPTARG" 2> /dev/null
@@ -247,12 +250,52 @@ while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:" OPTION; do
 		z)
 			PHP_VERSION_BASE="$OPTARG"
 			;;
+		p)
+			write_out "opt" "Enabling PHP-CPP support"
+			ENABLE_PHPCPP="yes"
+			;;
+		E)
+			FEATURES="$OPTARG"
+			for feature in $(echo $FEATURES | tr ',' ' '); do
+				case $feature in
+					zephir)
+						write_out "opt" "Enabling Zephir support"
+						ENABLE_ZEPHIR="yes"
+			      DO_CLEANUP="no"
+						;;
+					php_cpp)
+						write_out "opt" "Enabling PHP-CPP support"
+						ENABLE_PHPCPP="yes"
+			      DO_CLEANUP="no"
+						;;
+					mongodb)
+						write_out "opt" "Enabling MongoDB support"
+						ENABLE_MONGO="yes"
+						HAVE_MONGO="--with-mongodb-ssl"
+						;;
+					redis)
+						write_out "opt" "Enabling Redis support"
+						ENABLE_REDIS="yes"
+						HAVE_REDIS=""
+						;;
+					ffi)
+						write_out "opt" "Enabling FFI support"
+						HAVE_FFI="--with-ffi"
+						;;
+					*)
+						write_error "Unknown feature: $feature"
+						exit 1
+						;;
+				esac
+			done
+			;;
 		\?)
 			write_error "Invalid option: -$OPTARG"
 			exit 1
 			;;
 	esac
 done
+
 
 function php_version_id {
 	local PHP_VERSION="$1"
@@ -1102,6 +1145,30 @@ function build_php_cpp {
 	write_done
 }
 
+function build_zephir {
+	write_library "zephir-parser" "$EXT_ZEPHIR_VERSION"
+	local zephir_dir="./php-zephir-parser-$EXT_ZEPHIR_VERSION"
+
+	if cant_use_cache "$zephir_dir"; then
+    download_github_src "zephir-lang/php-zephir-parser" "v$EXT_ZEPHIR_VERSION" "php-zephir-parser" | tar -zx >> "$DIR/install.log" 2>&1
+    cd "$zephir_dir"
+    write_configure
+    "$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
+    ./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+    write_compile
+    make -j $THREADS INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config"  >> "$DIR/install.log" 2>&1 && mark_cache
+  else
+		write_caching
+		cd "$zephir_dir"
+  fi
+  write_install
+  make install INSTALL_PREFIX="$INSTALL_DIR" PHP_CONFIG="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+  echo ";Zephir Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+  echo "extension=zephir_parser.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
+  cd ..
+  write_done
+}
+
 cd "$LIB_BUILD_DIR"
 
 build_zstd
@@ -1268,6 +1335,7 @@ fi
 
 RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLAGS="$LDFLAGS $FLAGS_LTO" ./configure $PHP_OPTIMIZATION --prefix="$INSTALL_DIR" \
 --exec-prefix="$INSTALL_DIR" \
+$HAVE_REDIS \
 --with-curl \
 --with-zlib \
 --with-libzstd \
@@ -1326,8 +1394,8 @@ $HAVE_MYSQLI \
 --enable-snappy \
 --enable-encoding \
 $HAVE_VALGRIND \
---with-mongodb-ssl \
---with-ffi \
+$HAVE_MONGO \
+$HAVE_FFI \
 $CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 write_compile
 if [ "$COMPILE_FOR_ANDROID" == "yes" ]; then
@@ -1424,6 +1492,7 @@ fi
 
 write_done
 
+if [ "$ENABLE_REDIS" == "yes" ]; then
 get_github_extension "phpredis" "$EXT_PHPREDIS_VERSION" "phpredis" "phpredis"
 write_library "phpredis" "$EXT_PHPREDIS_VERSION"
 cd "$BUILD_DIR/php/ext/phpredis"
@@ -1437,7 +1506,9 @@ make install >> "$DIR/install.log" 2>&1
 echo ";REDIS Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
+fi
 
+if [ "$ENABLE_MONGO" == "yes" ]; then
 write_download "mongo-php-driver"
 git clone https://github.com/mongodb/mongo-php-driver.git  >> "$DIR/install.log" 2>&1
 mv "mongo-php-driver" "$BUILD_DIR/php/ext/mongo-php-driver"  >> "$DIR/install.log" 2>&1
@@ -1453,8 +1524,15 @@ make install >> "$DIR/install.log" 2>&1
 echo ";MongoDB Support" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 echo "extension=mongodb.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
 write_done
+fi
 
+if [ "$ENABLE_PHPCPP" == "yes" ]; then
 build_php_cpp
+fi
+
+if [ "$ENABLE_ZEPHIR" == "yes" ]; then
+build_zephir
+fi
 
 if [[ "$HAVE_XDEBUG" == "yes" ]]; then
 	get_github_extension "xdebug" "$EXT_XDEBUG_VERSION" "xdebug" "xdebug"
