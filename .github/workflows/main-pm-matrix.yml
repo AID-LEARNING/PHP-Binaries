@@ -79,7 +79,7 @@ jobs:
           chmod +x compile.sh
           ./compile.sh -t android-aarch64 -x -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }}
         
-
+      
       - name: Create tarball
         run: |
           tar -czf ./PHP-${{ inputs.php-version-base }}-Android-arm64-PM${{ inputs.pm-version-major }}.tar.gz bin
@@ -134,7 +134,6 @@ jobs:
           # Used "set -ex" instead of hashbang since script isn't executed with hashbang
           set -ex
           trap "exit 1" ERR
-          chmod +x ./compile.sh
           ./compile.sh -t linux64 -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }}
 
       - name: Create tarball
@@ -280,6 +279,9 @@ jobs:
     if: ${{ github.ref_name == 'stable' && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
     concurrency: release-${{ inputs.php-version-base }}-pm${{ inputs.pm-version-major }}
 
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -333,7 +335,7 @@ jobs:
           echo DATE=$(date -u +'%d %b %Y') >> $GITHUB_OUTPUT
 
       - name: Update recommended PM release
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.15.0
         if: ${{ inputs.special-release != 'none' }}
         with:
           artifacts: |
@@ -350,7 +352,7 @@ jobs:
           prerelease: ${{ inputs.pm-preview == 'true' }}
 
       - name: Update php-version PM release
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.15.0
         with:
           artifacts: |
             ${{ github.workspace }}/*PHP-*-PM*/*.tar.gz

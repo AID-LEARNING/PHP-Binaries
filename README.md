@@ -79,43 +79,43 @@ This script doesn't accept parameters, but the following environment variables a
 ## For developers: Version info sources
 ### Libraries
 
-| Name of package | Version info URL | Needed for | Notes |
-|:----------------|:-----------------|:-----------|:------|
-| zlib | https://github.com/madler/zlib/tags | Compression | |
-| gmp | https://gmplib.org/ | Big integer math for Bedrock packet encryption | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
-| curl | https://github.com/curl/curl/releases | Web requests | |
-| libyaml | https://github.com/yaml/libyaml/releases | Parsing YAML config files | |
-| leveldb | https://github.com/pmmp/leveldb/commits/mojang-compatible/ | Bedrock world support | Custom version based on google/leveldb with minimum required changes to support MCPE worlds |
-| libxml | https://gitlab.gnome.org/GNOME/libxml2/-/releases | XML parsing support for UPnP | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
-| libpng | https://sourceforge.net/projects/libpng/files/libpng16/ | php-gd, plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
-| libjpeg | https://ijg.org/ | php-gd, plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
-| openssl | https://github.com/openssl/openssl/releases | Bedrock packet encryption, secure web requests | |
-| libzip | https://github.com/nih-at/libzip/releases | Resource packs | |
-| sqlite3 | https://sqlite.org/download.html | Plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
-| libdeflate | https://github.com/ebiggers/libdeflate/blob/master/NEWS.md | Faster alternative to zlib for network use | |
-| pthreads4w | https://sourceforge.net/projects/pthreads4w/files/ | Needed by ext-pmmpthread on Windows | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| Link to package | Needed for | Notes |
+|:----------------|:-----------|:------|
+| [zlib](https://github.com/madler/zlib/tags) | Compression | |
+| [gmp](https://gmplib.org/) | Big integer math for Bedrock packet encryption | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [curl](https://github.com/curl/curl/releases) | Web requests | |
+| [libyaml](https://github.com/yaml/libyaml/releases) | Parsing YAML config files | |
+| [leveldb](https://github.com/pmmp/leveldb/commits/mojang-compatible/) | Bedrock world support | Custom version based on google/leveldb with minimum required changes to support MCPE worlds |
+| [libxml](https://gitlab.gnome.org/GNOME/libxml2/-/releases) | XML parsing support for UPnP | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [libpng](https://sourceforge.net/projects/libpng/files/libpng16/) | php-gd, plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [libjpeg](https://ijg.org/) | php-gd, plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [openssl](https://github.com/openssl/openssl/releases) | Bedrock packet encryption, secure web requests | |
+| [libzip](https://github.com/nih-at/libzip/releases) | Resource packs | |
+| [sqlite3](https://sqlite.org/download.html) | Plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [libdeflate](https://github.com/ebiggers/libdeflate/blob/master/NEWS.md) | Faster alternative to zlib for network use | |
+| [pthreads4w](https://sourceforge.net/projects/pthreads4w/files/) | Needed by ext-pmmpthread on Windows | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
 
 ### PHP & extensions
 
-| Name of package | Version info URL | Needed for | Notes |
-|:----------------|:-----------------|:-----------|:------|
-| PHP | https://www.php.net/releases/?json&version=8.2 | Everything | Replace 8.2 with your chosen version |
-| pmmpthread | https://github.com/pmmp/ext-pmmpthread/releases | PHP threading | |
-| yaml | https://github.com/php/pecl-file_formats-yaml/tags | YAML config parsing | Yes, the mix of - and _ is intentional. Don't ask me. |
-| leveldb | https://github.com/pmmp/php-leveldb/commits/pmmp-mojang-compatible/ | Bedrock world support | Custom version to provide `LEVELDB_ZLIB_RAW_COMPRESSION` support |
-| chunkutils2 | https://github.com/pmmp/ext-chunkutils2/releases | `PalettedBlockArray` and other low-level stuff | |
-| xdebug | https://github.com/xdebug/xdebug/releases | Debugging | Not needed for production |
-| igbinary | https://github.com/igbinary/igbinary/releases | Faster serialization, mostly for moving stuff between threads | Non-essential, could be ditched if necessary |
-| crypto | https://github.com/bukka/php-crypto/tags | Bedrock packet encryption | |
-| recursionguard | https://github.com/pmmp/ext-recursionguard/releases | Debugging | Not needed for production |
-| libdeflate | https://github.com/pmmp/ext-libdeflate/releases | Faster network compression | Non-essential but provides significant performance advantage over zlib |
-| morton | https://github.com/pmmp/ext-morton | Packing X/Z and X/Y/Z coordinates into ints in a format suitable for PHP array keys | Needed for performance |
-| xxhash | https://github.com/pmmp/ext-xxhash/releases | Not currently used | Could be replaced by `hash()` in recent versions of PHP but this extension has much better performance |
-| arraydebug | https://github.com/pmmp/ext-arraydebug/tags | Debugging array hash collisions | |
-| encoding | https://github.com/pmmp/ext-encoding/releases | Not currently used | Experimental, intended to replace `BinaryUtils` but never finished |
+| Link to package | Needed for | Notes |
+|:----------------|:-----------|:------|
+| [PHP](https://www.php.net/releases/?json&version=8.2) | Everything | Replace 8.2 in the URL with your chosen version |
+| [pmmpthread](https://github.com/pmmp/ext-pmmpthread/releases) | PHP threading | |
+| [yaml](https://github.com/php/pecl-file_formats-yaml/tags) | YAML config parsing | Yes, the mix of - and _ is intentional. Don't ask me. |
+| [leveldb](https://github.com/pmmp/php-leveldb/commits/pmmp-mojang-compatible/) | Bedrock world support | Custom version to provide `LEVELDB_ZLIB_RAW_COMPRESSION` support |
+| [chunkutils2](https://github.com/pmmp/ext-chunkutils2/releases) | `PalettedBlockArray` and other low-level stuff | |
+| [xdebug](https://github.com/xdebug/xdebug/releases) | Debugging | Not needed for production |
+| [igbinary](https://github.com/igbinary/igbinary/releases) | Faster serialization, mostly for moving stuff between threads | Non-essential, could be ditched if necessary |
+| [crypto](https://github.com/bukka/php-crypto/tags) | Bedrock packet encryption | |
+| [recursionguard](https://github.com/pmmp/ext-recursionguard/releases) | Debugging | Not needed for production |
+| [libdeflate](https://github.com/pmmp/ext-libdeflate/releases) | Faster network compression | Non-essential but provides significant performance advantage over zlib |
+| [morton](https://github.com/pmmp/ext-morton) | Packing X/Z and X/Y/Z coordinates into ints in a format suitable for PHP array keys | Needed for performance |
+| [xxhash](https://github.com/pmmp/ext-xxhash/releases) | Not currently used | Could be replaced by `hash()` in recent versions of PHP but this extension has much better performance |
+| [arraydebug](https://github.com/pmmp/ext-arraydebug/tags) | Debugging array hash collisions | |
+| [encoding](https://github.com/pmmp/ext-encoding/releases) | Not currently used | Experimental, intended to replace `BinaryUtils` but never finished |
 
 ### Misc
 
-| Name of package | Version info URL | Needed for | Notes |
-|:----------------|:-----------------|:-----------|:------|
-| php-sdk-binary-tools | https://github.com/php/php-sdk-binary-tools/releases | Building PHP on Windows | |
+| Link to package | Needed for | Notes |
+|:----------------|:-----------|:------|
+| [php-sdk-binary-tools](https://github.com/php/php-sdk-binary-tools/releases) | Building PHP on Windows | |
