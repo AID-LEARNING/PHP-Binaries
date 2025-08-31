@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference="Stop"
 $ProgressPreference="SilentlyContinue"
 
-$PHP_VERSIONS=@("8.2.25", "8.3.13")
+$PHP_VERSIONS=@("8.2.28", "8.3.21")
 
 $PHP_SDK_VER="2.3.0"
 $ARCH="x64"
@@ -12,7 +12,7 @@ $ARCH="x64"
 $LIBYAML_VER="0.2.5"
 $PTHREAD_W32_VER="3.0.0"
 $LEVELDB_MCPE_VER="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
-$LIBDEFLATE_VER="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
+$LIBDEFLATE_VER="96836d7d9d10e3e0d53e6edb54eb908514e336c4" #1.24 - see above note about "v" prefixes
 
 $PHP_PMMPTHREAD_VER="6.1.1"
 $PHP_YAML_VER="2.2.4"
@@ -24,7 +24,7 @@ $PHP_RECURSIONGUARD_VER="0.1.0"
 $PHP_MORTON_VER="0.1.2"
 $PHP_LIBDEFLATE_VER="0.2.1"
 $PHP_XXHASH_VER="0.2.0"
-$PHP_XDEBUG_VER="3.3.2"
+$PHP_XDEBUG_VER="3.4.3"
 $PHP_ARRAYDEBUG_VER="0.2.0"
 $PHP_ENCODING_VER="0.4.0"
 

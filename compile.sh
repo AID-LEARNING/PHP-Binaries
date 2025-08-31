@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PHP_VERSIONS=("8.2.27" "8.3.15")
+PHP_VERSIONS=("8.2.28" "8.3.21")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
@@ -7,22 +7,27 @@ PHP_VERSIONS=("8.2.27" "8.3.15")
 
 ZLIB_VERSION="1.3.1"
 GMP_VERSION="6.3.0"
-CURL_VERSION="curl-8_9_1"
+
+### Think twice before updating the minor/major versions of curl.
+### curl is by far the worst offender when it comes to random
+### build breakages on updates.
+CURL_VERSION="curl-8_13_0"
+
 YAML_VERSION="0.2.5"
 LEVELDB_VERSION="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
-LIBXML_VERSION="2.10.1" #2.10.2 requires automake 1.16.3, which isn't easily available on Ubuntu 20.04
-LIBPNG_VERSION="1.6.43"
+LIBXML_VERSION="2.14.3"
+LIBPNG_VERSION="1.6.48"
 LIBJPEG_VERSION="9f"
-OPENSSL_VERSION="3.4.0"
-LIBZIP_VERSION="1.10.1"
-SQLITE3_VERSION="3450200" #3.45.2
-LIBDEFLATE_VERSION="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
+OPENSSL_VERSION="3.5.0"
+LIBZIP_VERSION="1.11.3"
+SQLITE3_VERSION="3500000" #3.50.0
+LIBDEFLATE_VERSION="96836d7d9d10e3e0d53e6edb54eb908514e336c4" #1.24 - see above note about "v" prefixes
 
 EXT_PMMPTHREAD_VERSION="6.1.1"
 EXT_YAML_VERSION="2.2.4"
 EXT_LEVELDB_VERSION="317fdcd8415e1566fc2835ce2bdb8e19b890f9f3" #release not tagged
 EXT_CHUNKUTILS2_VERSION="0.3.5"
-EXT_XDEBUG_VERSION="3.3.2"
+EXT_XDEBUG_VERSION="3.4.3"
 EXT_IGBINARY_VERSION="3.2.16"
 EXT_CRYPTO_VERSION="abbe7cbf869f96e69f2ce897271a61d32f43c7c0" #release not tagged
 EXT_RECURSIONGUARD_VERSION="0.1.0"
@@ -163,7 +168,7 @@ COMPILE_GD="no"
 ENABLE_REDIS="no"
 ENABLE_MONGO="no"
 HAVE_MONGO=""
-HAVE_REDIS="--disable-session"
+HAVE_SESSION="--disable-session"
 PM_VERSION_MAJOR=""
 
 DOWNLOAD_INSECURE="no"
@@ -276,7 +281,7 @@ while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:p:E:" OPTION; do
 					redis)
 						write_out "opt" "Enabling Redis support"
 						ENABLE_REDIS="yes"
-						HAVE_REDIS=""
+						HAVE_SESSION=""
 						;;
 					ffi)
 						write_out "opt" "Enabling FFI support"
@@ -526,7 +531,7 @@ echo "}" >> test.c
 type $CC >> "$DIR/install.log" 2>&1 || { write_error "Please install \"$CC\""; exit 1; }
 
 if [ -z "$THREADS" ]; then
-	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."
+	write_out "WARNING" "Only 1 thread is used by default. Increase thread count using -j (e.g. -j 4) to compile faster."	
 	THREADS=1;
 fi
 [ -z "$march" ] && march=native;
@@ -770,6 +775,7 @@ function build_curl {
 		--without-brotli \
 		--without-nghttp2 \
 		--with-zstd="$INSTALL_DIR" \
+		--without-libpsl \
 		--with-zlib="$INSTALL_DIR" \
 		--with-ssl="$INSTALL_DIR" \
 		--enable-threaded-resolver \
@@ -1007,6 +1013,7 @@ function build_libzip {
 			-DENABLE_GNUTLS=OFF \
 			-DENABLE_MBEDTLS=OFF \
 			-DENABLE_LZMA=OFF \
+			-DBUILD_OSSFUZZ=OFF \
 			-DENABLE_ZSTD=OFF >> "$DIR/install.log" 2>&1
 		write_compile
 		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
@@ -1022,9 +1029,9 @@ function build_libzip {
 
 function build_sqlite3 {
 	if [ "$DO_STATIC" == "yes" ]; then
-		local EXTRA_FLAGS="--enable-static=yes --enable-shared=no"
+		local EXTRA_FLAGS="--disable-shared"
 	else
-		local EXTRA_FLAGS="--enable-static=no --enable-shared=yes"
+		local EXTRA_FLAGS="--disable-static"
 	fi
 
 	write_library sqlite3 "$SQLITE3_VERSION"
@@ -1040,7 +1047,6 @@ function build_sqlite3 {
 		LDFLAGS="$LDFLAGS -L${INSTALL_DIR}/lib" CPPFLAGS="$CPPFLAGS -I${INSTALL_DIR}/include" RANLIB=$RANLIB ./configure \
 		--prefix="$INSTALL_DIR" \
 		--disable-dependency-tracking \
-		--enable-static-shell=no \
 		$EXTRA_FLAGS \
 		$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 		write_compile
@@ -1187,6 +1193,7 @@ else
 	HAS_GD=""
 	HAS_LIBJPEG=""
 fi
+
 build_libxml2
 build_libzip
 build_sqlite3
@@ -1231,7 +1238,6 @@ get_github_extension "zstd" "$EXT_ZSTD_VERSION" "kjdev" "php-ext-zstd"
 echo -n "  snappy: downloading $EXT_SNAPPY_VERSION..."
 git clone --branch $EXT_SNAPPY_VERSION --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git  "$BUILD_DIR/php/ext/snappy" >> "$DIR/install.log" 2>&1
 write_done
-
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
@@ -1335,7 +1341,6 @@ fi
 
 RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLAGS="$LDFLAGS $FLAGS_LTO" ./configure $PHP_OPTIMIZATION --prefix="$INSTALL_DIR" \
 --exec-prefix="$INSTALL_DIR" \
-$HAVE_REDIS \
 --with-curl \
 --with-zlib \
 --with-libzstd \
@@ -1365,6 +1370,7 @@ $HAS_DEBUG \
 --enable-xmlwriter \
 --disable-cgi \
 --disable-phpdbg \
+$HAVE_SESSION \
 --without-pear \
 --without-iconv \
 --with-pdo-sqlite \

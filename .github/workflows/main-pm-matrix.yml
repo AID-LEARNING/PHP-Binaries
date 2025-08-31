@@ -26,7 +26,7 @@ env:
 jobs:
   android:
     name: Android arm64
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -76,8 +76,7 @@ jobs:
           # Used "set -ex" instead of hashbang since script isn't executed with hashbang
           set -ex
           trap "exit 1" ERR
-          chmod +x compile.sh
-          ./compile.sh -t android-aarch64 -x -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }}
+          ./compile.sh -t android-aarch64 -x -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }} -E ffi,redis,zephir
         
       
       - name: Create tarball
@@ -111,7 +110,7 @@ jobs:
 
   linux:
     name: Linux
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -200,7 +199,7 @@ jobs:
           export PATH="/usr/local/opt/bison/bin:$PATH"
           set -ex
           trap "exit 1" ERR
-          ./compile.sh -t ${{ matrix.target-name }} -j4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }}
+          ./compile.sh -t ${{ matrix.target-name }} -j4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }}  -E ffi,redis,zephir
           
       - name: Create tarball
         run: |
