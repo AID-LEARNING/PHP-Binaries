@@ -21,7 +21,7 @@ on:
         type: boolean
 
 env:
-  MUSL_CROSS_MAKE_VERSION: 7b9487e56efc83c419a397af7df7f119001dc51c
+  MUSL_CROSS_MAKE_VERSION: 43fcb1e63786b96add78f89d7454709ae0159fa0
 
 jobs:
   android:
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install tools and dependencies
         run: |
@@ -50,11 +50,10 @@ jobs:
         with:
           path: ${{ github.workspace }}/compiler
           key: musl-cross-make-${{ env.MUSL_CROSS_MAKE_VERSION }}
-          restore-keys: musl-cross-make-
 
       - name: Checkout musl-cross-make
         if: steps.compiler-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: pmmp/musl-cross-make
           path: musl-cross-make
@@ -113,7 +112,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install tools and dependencies
         run: |
@@ -178,7 +177,7 @@ jobs:
             image: macos-14
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Install tools and dependencies
         run: |
@@ -232,10 +231,10 @@ jobs:
 
   windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Prepare download cache
         id: download-cache
@@ -282,7 +281,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Update latest tag target
         run: |
@@ -292,7 +291,7 @@ jobs:
           git push -f origin pm${{ inputs.pm-version-major }}-latest
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ github.workspace }}
           pattern: "*PHP-${{ inputs.php-version-base }}-*-PM${{ inputs.pm-version-major }}"
@@ -334,7 +333,7 @@ jobs:
           echo DATE=$(date -u +'%d %b %Y') >> $GITHUB_OUTPUT
 
       - name: Update recommended PM release
-        uses: ncipollo/release-action@v1.15.0
+        uses: ncipollo/release-action@v1.20.0
         if: ${{ inputs.special-release != 'none' }}
         with:
           artifacts: |
@@ -351,7 +350,7 @@ jobs:
           prerelease: ${{ inputs.pm-preview == 'true' }}
 
       - name: Update php-version PM release
-        uses: ncipollo/release-action@v1.15.0
+        uses: ncipollo/release-action@v1.20.0
         with:
           artifacts: |
             ${{ github.workspace }}/*PHP-*-PM*/*.tar.gz

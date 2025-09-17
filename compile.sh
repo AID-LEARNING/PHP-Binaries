@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PHP_VERSIONS=("8.2.28" "8.3.21")
+PHP_VERSIONS=("8.1.33" "8.2.29" "8.3.25" "8.4.12")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
@@ -15,27 +15,27 @@ CURL_VERSION="curl-8_13_0"
 
 YAML_VERSION="0.2.5"
 LEVELDB_VERSION="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
-LIBXML_VERSION="2.14.3"
-LIBPNG_VERSION="1.6.48"
+LIBXML_VERSION="2.14.5"
+LIBPNG_VERSION="1.6.50"
 LIBJPEG_VERSION="9f"
-OPENSSL_VERSION="3.5.0"
-LIBZIP_VERSION="1.11.3"
-SQLITE3_VERSION="3500000" #3.50.0
+OPENSSL_VERSION="3.5.2"
+LIBZIP_VERSION="1.11.4"
+SQLITE3_VERSION="3500400" #3.50.4
 LIBDEFLATE_VERSION="96836d7d9d10e3e0d53e6edb54eb908514e336c4" #1.24 - see above note about "v" prefixes
 
-EXT_PMMPTHREAD_VERSION="6.1.1"
-EXT_YAML_VERSION="2.2.4"
-EXT_LEVELDB_VERSION="317fdcd8415e1566fc2835ce2bdb8e19b890f9f3" #release not tagged
+EXT_PMMPTHREAD_VERSION="6.2.0"
+EXT_YAML_VERSION="2.2.5"
+EXT_LEVELDB_VERSION="88071eb1b1eae96af043229104b9d813f7cbe40c" #release not tagged
 EXT_CHUNKUTILS2_VERSION="0.3.5"
-EXT_XDEBUG_VERSION="3.4.3"
+EXT_XDEBUG_VERSION="3.4.5"
 EXT_IGBINARY_VERSION="3.2.16"
-EXT_CRYPTO_VERSION="abbe7cbf869f96e69f2ce897271a61d32f43c7c0" #release not tagged
+EXT_CRYPTO_VERSION="999b3c7edbc7f8ca4fdeb0bb4bbae488ad0daf07" #release not tagged
 EXT_RECURSIONGUARD_VERSION="0.1.0"
 EXT_LIBDEFLATE_VERSION="0.2.1"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.2.0"
-EXT_ENCODING_VERSION="0.4.0"
+EXT_ENCODING_VERSION="1.0.0"
 
 LIBZTD_VERSION="1.5.5"
 EXT_ZSTD_VERSION="0.13.1"
@@ -244,7 +244,7 @@ while getopts "::t:j:sdDxfgnva:P:c:l:Jiz:p:E:" OPTION; do
 			PM_VERSION_MAJOR="$OPTARG"
 			;;
 		J)
-			write_out "opt" "Compiling JIT support in OPcache (unstable)"
+			write_out "opt" "Compiling JIT support in OPcache"
 			HAVE_OPCACHE_JIT="yes"
 			;;
 		i)
@@ -354,6 +354,19 @@ fi
 PHP_VERSION_ID=$(php_version_id "$PHP_VERSION")
 write_out "opt" "Selected PHP $PHP_VERSION ($PHP_VERSION_ID)"
 
+if [ $PHP_VERSION_ID -ge 80400 ]; then
+  HAVE_OPCACHE_JIT="yes"
+fi
+if [ "$HAVE_OPCACHE_JIT" == "yes" ]; then
+  if [ $PHP_VERSION_ID -lt 80400 ]; then
+    write_out "WARNING" "JIT in versions below PHP 8.4 is highly unstable and not recommended"
+  else
+    write_out "WARNING" "JIT in PHP 8.4 has not been tested, use it with caution"
+  fi
+else
+  write_out "INFO" "JIT support in OPcache won't be compiled"
+fi
+
 #Needed to use aliases
 shopt -s expand_aliases
 type wget >> "$DIR/install.log" 2>&1
@@ -431,6 +444,7 @@ if [ "$IS_CROSSCOMPILE" == "yes" ]; then
 		DO_STATIC="yes"
 		OPENSSL_TARGET="linux-aarch64"
 		export ac_cv_func_fnmatch_works=yes #musl should be OK
+
 		write_out "INFO" "Cross-compiling for Android ARMv8 (aarch64)"
 	#TODO: add cross-compile for aarch64 platforms (ios, rpi)
 	else
@@ -1302,6 +1316,16 @@ if [ "$IS_CROSSCOMPILE" == "yes" ]; then
 		if [ "$COMPILE_FOR_ANDROID" == "no" ]; then
 			export LIBS="$LIBS -lpthread -ldl -lresolv"
 		else
+			#workarounds for musl 1.2.5
+			if [ "$PHP_VERSION_ID" -lt 80400 ]; then
+				sed -i=".backup" 's/cookie_io_functions_use_off64_t=yes/cookie_io_functions_use_off64_t=no/' ./configure
+				export ac_cv_pread=yes
+				export ac_cv_pwrite=yes
+			else
+				export php_cv_type_cookie_off64_t=no
+				export php_cv_func_pread=yes
+				export php_cv_func_pwrite=yes
+			fi
 			export LIBS="$LIBS -lpthread -lresolv"
 		fi
 	else
@@ -1483,8 +1507,8 @@ if [ "$HAVE_OPCACHE" == "yes" ]; then
 	if [ "$HAVE_OPCACHE_JIT" == "yes" ]; then
 		echo "" >> "$INSTALL_DIR/bin/php.ini"
 		echo "; ---- ! WARNING ! ----" >> "$INSTALL_DIR/bin/php.ini"
-		echo "; JIT can provide big performance improvements, but as of PHP $PHP_VERSION it is still unstable. For this reason, it is disabled by default." >> "$INSTALL_DIR/bin/php.ini"
-		echo "; Enable it at your own risk. See https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.jit for possible options." >> "$INSTALL_DIR/bin/php.ini"
+		echo "; JIT can provide big performance improvements, but it may make your server crash or behave in weird ways. Use it at your own risk." >> "$INSTALL_DIR/bin/php.ini"
+		echo "; See https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.jit for possible options." >> "$INSTALL_DIR/bin/php.ini"
 		echo "opcache.jit=off" >> "$INSTALL_DIR/bin/php.ini"
 		echo "opcache.jit_buffer_size=128M" >> "$INSTALL_DIR/bin/php.ini"
 	fi
@@ -1565,28 +1589,6 @@ if [[ "$HAVE_XDEBUG" == "yes" ]]; then
 	write_out INFO "Xdebug is included, but disabled by default. To enable it, change 'xdebug.mode' in your php.ini file."
 fi
 
-function separate_symbols {
-	local libname="$1"
-	local output_dirname
-
-	output_dirname="$SYMBOLS_DIR/$(dirname $libname)"
-	mkdir -p "$output_dirname" >> "$DIR/install.log" 2>&1
-	cp "$libname" "$SYMBOLS_DIR/$libname.debug" >> "$DIR/install.log" 2>&1
-	"$STRIP" -S "$libname" >> "$DIR/install.log" 2>&1 || rm "$SYMBOLS_DIR/$libname.debug" #if this fails, this probably isn't an executable binary
-}
-
-if [ "$SEPARATE_SYMBOLS" != "no" ]; then
-	echo -n "[INFO] Separating debugging symbols into $SYMBOLS_DIR..."
-	cd "$INSTALL_DIR"
-	find "lib" \( -name '*.so' -o -name '*.so.*' -o -name '*.dylib' -o -name '*.dylib.*' \) -print0 | while IFS= read -r -d '' file; do
-		separate_symbols "$file"
-	done
-	for file in "bin/"*; do
-		separate_symbols "$file"
-	done
-	cd "$DIR"
-	write_done
-fi
 
 cd "$DIR"
 if [ "$DO_CLEANUP" == "yes" ]; then
@@ -1603,6 +1605,22 @@ if [ "$DO_CLEANUP" == "yes" ]; then
 	rm -r -f "$INSTALL_DIR/lib/"*.a >> "$DIR/install.log" 2>&1
 	rm -r -f "$INSTALL_DIR/lib/"*.la >> "$DIR/install.log" 2>&1
 	rm -r -f "$INSTALL_DIR/include" >> "$DIR/install.log" 2>&1
+fi
+
+if [ "$SEPARATE_SYMBOLS" != "no" ]; then
+	echo -n "[INFO] Separating debugging symbols into $SYMBOLS_DIR..."
+	rm -rf "$SYMBOLS_DIR" || true 2>&1
+	mkdir -p "$SYMBOLS_DIR" || true 2>&1
+	cp -r "$INSTALL_DIR"/* "$SYMBOLS_DIR"
+	cd "$INSTALL_DIR"
+	find "lib" \( -name '*.so' -o -name '*.so.*' -o -name '*.dylib' -o -name '*.dylib.*' \) -print0 | while IFS= read -r -d '' file; do
+		"$STRIP" -S "$file" >> "$DIR/install.log" 2>&1 || true #if this fails, this probably isn't an executable binary
+	done
+	for file in "bin/"*; do
+		"$STRIP" -S "$file" >> "$DIR/install.log" 2>&1 || true #if this fails, this probably isn't an executable binary
+	done
+	cd "$DIR"
+	write_done
 fi
 
 date >> "$DIR/install.log" 2>&1
