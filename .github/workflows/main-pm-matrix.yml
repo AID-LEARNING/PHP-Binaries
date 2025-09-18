@@ -145,7 +145,7 @@ jobs:
         with:
           name: PHP-${{ inputs.php-version-base }}-Linux-PM${{ inputs.pm-version-major }}
           path: |
-            ./*PHP-${{ inputs.php-version-base }}-Linux-x86_64-PM${{ inuts.pm-version-major }}*.tar.gz
+            ./*PHP-${{ inputs.php-version-base }}-Linux-x86_64-PM${{ inputs.pm-version-major }}*.tar.gz
             install.log
             compile.sh
           if-no-files-found: error
