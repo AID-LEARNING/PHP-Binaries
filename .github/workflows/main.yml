@@ -21,7 +21,7 @@ jobs:
             php-version-base: "8.1"
           - pm-version-major: 5
             php-version-base: "8.2"
-            special-release: default-latest #default = best for PM5, latest = display as latest on GitHub
+            special-release: default-latest #default = best for PM5, latest = display as latest on GitHub 
           - pm-version-major: 5
             php-version-base: "8.3"
           - pm-version-major: 5
@@ -67,20 +67,5 @@ jobs:
           name: PHP (Build ${{ github.run_number }}) - Archive
           tag: php-build-${{ github.run_number }}
           commit: ${{ github.sha }}
-          allowUpdates: true
-          bodyFile: ${{ github.workspace }}/changelog.md
-          removeArtifacts: true
-          prerelease: ${{ endsWith(github.ref_name, '-preview') }}
-
-      - name: Publish unique release
-        uses: ncipollo/release-action@v1.14.0
-        with:
-          artifacts: |
-            ${{ github.workspace }}/Linux-PM*/*.tar.gz
-            ${{ github.workspace }}/MacOS-*-PM*/*.tar.gz
-            ${{ github.workspace }}/Windows-PM*/*.zip
-          makeLatest: false
-          name: PHP ${{ steps.version.outputs.PHP_VERSION }} (Build ${{ github.run_number }})
-          tag: php-${{ steps.version.outputs.PHP_VERSION }}-build-${{ github.run_number }}
-          commit: ${{ github.sha }}
+          allowUpdates: false
           bodyFile: ${{ github.workspace }}/changelog.md
