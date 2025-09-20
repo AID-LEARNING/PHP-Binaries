@@ -81,12 +81,11 @@ jobs:
           if-no-files-found: error
 
 
-
   publish:
     name: Publish binaries
     needs: [linux]
-    runs-on: ubuntu-20.04
-    #if: ${{ github.ref_name == 'stable' && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
+    runs-on: ubuntu-22.04
+    if: ${{ github.ref_name == 'stable' && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
     concurrency: release-${{ inputs.php-version-base }}-pm${{ inputs.pm-version-major }}
 
     permissions:
@@ -97,7 +96,7 @@ jobs:
 
       - name: Update latest tag target
         run: |
-          git tag -f pm${{ inputs.pm-version-major }}-hp-${{ inputs.php-version-base }}-latest
+          git tag -f pm${{ inputs.pm-version-major }}-php-${{ inputs.php-version-base }}-latest
           git push -f origin pm${{ inputs.pm-version-major }}-php-${{ inputs.php-version-base }}-latest
           git tag -f pm${{ inputs.pm-version-major }}-latest
           git push -f origin pm${{ inputs.pm-version-major }}-latest
@@ -176,4 +175,3 @@ jobs:
           bodyFile: ${{ github.workspace }}/changelog.md
           makeLatest: false
           prerelease: ${{ inputs.pm-preview == 'true' }}
-
