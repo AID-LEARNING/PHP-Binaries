@@ -26,6 +26,9 @@ jobs:
             php-version-base: "8.3"
           - pm-version-major: 5
             php-version-base: "8.4"
+          - pm-version-major: 5
+            php-version-base: "8.5"
+            pm-preview: true
 
     uses: ./.github/workflows/main-pm-matrix.yml
     with:
@@ -43,7 +46,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: ${{ github.workspace }}
 

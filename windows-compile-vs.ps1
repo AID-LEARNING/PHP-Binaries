@@ -1,9 +1,9 @@
 ﻿$ErrorActionPreference="Stop"
 $ProgressPreference="SilentlyContinue"
 
-$PHP_VERSIONS=@("8.1.33", "8.2.29", "8.3.25", "8.4.12")
+$PHP_VERSIONS=@("8.1.34", "8.2.30", "8.3.29", "8.4.16", "8.5.0")
 
-$PHP_SDK_VER="2.3.0"
+$PHP_SDK_VER="2.4.0"
 $ARCH="x64"
 
 
@@ -15,8 +15,8 @@ $PTHREAD_W32_VER="3.0.0"
 $LEVELDB_MCPE_VER="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
 $LIBDEFLATE_VER="96836d7d9d10e3e0d53e6edb54eb908514e336c4" #1.24 - see above note about "v" prefixes
 
-$PHP_PMMPTHREAD_VER="6.2.0"
-$PHP_YAML_VER="2.2.5"
+$PHP_PMMPTHREAD_VER="6.3.0"
+$PHP_YAML_VER="2.3.0"
 $PHP_CHUNKUTILS2_VER="0.3.5"
 $PHP_IGBINARY_VER="3.2.16"
 $PHP_LEVELDB_VER="88071eb1b1eae96af043229104b9d813f7cbe40c" #release not tagged
@@ -25,9 +25,11 @@ $PHP_RECURSIONGUARD_VER="0.1.0"
 $PHP_MORTON_VER="0.1.2"
 $PHP_LIBDEFLATE_VER="0.2.1"
 $PHP_XXHASH_VER="0.2.0"
-$PHP_XDEBUG_VER="3.4.5"
-$PHP_ARRAYDEBUG_VER="0.2.0"
+$PHP_XDEBUG_VER="3.5.0"
+$PHP_ARRAYDEBUG_VER="0.2.1"
 $PHP_ENCODING_VER="1.0.0"
+
+$PHP_IGBINARY_VER_PHP85="3.2.17RC1"
 
 function pm-echo {
     param ([string] $message)
@@ -201,6 +203,9 @@ if ($PHP_VERSION_ID -ge 80400) {
 
 pm-echo "Selected PHP $PHP_VER ($PHP_VERSION_ID), SDK target $VC_VER ($SDK_TOOLSET_FLAG), CMake target $CMAKE_TARGET ($CMAKE_TOOLSET_FLAG)"
 
+if ($PHP_VERSION_ID -ge 80500) {
+    $PHP_IGBINARY_VER=$PHP_IGBINARY_VER_PHP85
+}
 $PHP_JIT_ENABLE_ARG="no"
 if ($PHP_VERSION_ID -ge 80400 -or $env:PHP_JIT_SUPPORT -eq 1) {
     $PHP_JIT_ENABLE_ARG="yes"
@@ -624,7 +629,9 @@ append-file-utf8 "extension=php_crypto.dll" $php_ini
 append-file-utf8 "extension=php_libdeflate.dll" $php_ini
 append-file-utf8 "extension=php_encoding.dll" $php_ini
 append-file-utf8 "igbinary.compact_strings=0" $php_ini
-append-file-utf8 "zend_extension=php_opcache.dll" $php_ini
+if ($PHP_VERSION_ID -lt 80500) {
+    append-file-utf8 "zend_extension=php_opcache.dll" $php_ini
+}
 append-file-utf8 "opcache.enable=1" $php_ini
 append-file-utf8 "opcache.enable_cli=1" $php_ini
 append-file-utf8 "opcache.save_comments=1" $php_ini
